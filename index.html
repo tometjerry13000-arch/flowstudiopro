@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flow Studio — Cinéma IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+        --bg: #000000; --bg-2: #0a0a0a; --bg-3: #121212;
+        --surface: #161616; --surface-2: #1e1e1e; --surface-3: #262626;
+        --border: #2a2a2a; --border-2: #383838; --border-3: #4a4a4a;
+        --ink: #ffffff; --ink-2: #b8b8b8; --ink-3: #7a7a7a; --ink-4: #4a4a4a;
+        --accent: #ffffff; --accent-dim: #d4d4d4;
+        --success: #22c55e; --error: #ef4444; --warn: #f59e0b;
+        --radius: 14px; --radius-sm: 10px; --radius-lg: 20px;
+    }
+    html, body { height: 100%; overflow-x: hidden; }
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg); color: var(--ink);
+        font-size: 14px; line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+    }
+    .app {
+        display: flex; flex-direction: column;
+        min-height: 100vh; max-width: 1200px;
+        margin: 0 auto; padding: 0 1rem;
+    }
+    .topbar {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        margin: 0 -1rem; padding: 0.85rem 1rem;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1rem;
+    }
+    .brand {
+        display: flex; align-items: center; gap: 0.6rem;
+        font-weight: 700; font-size: 1rem; letter-spacing: -0.02em;
+    }
+    .brand-logo {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: linear-gradient(135deg, #fff, #888);
+        display: flex; align-items: center; justify-content: center;
+        color: #000; font-weight: 900; font-size: 14px;
+        position: relative; overflow: hidden;
+    }
+    .brand-logo::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4));
+    }
+    .topbar-actions { display: flex; gap: 0.5rem; align-items: center; }
+    .btn-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--surface);
+        color: var(--ink); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px; transition: all 0.2s;
+    }
+    .btn-icon:hover { background: var(--surface-2); border-color: var(--border-2); }
+    .hero { padding: 2.5rem 0 1.5rem; text-align: center; }
+    .hero-title {
+        font-size: clamp(1.6rem, 5vw, 2.4rem);
+        font-weight: 800; letter-spacing: -0.04em;
+        line-height: 1.1; margin-bottom: 0.6rem;
+        background: linear-gradient(180deg, #fff 0%, #888 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .hero-sub {
+        font-size: 0.85rem; color: var(--ink-3);
+        max-width: 500px; margin: 0 auto;
+    }
+    .mode-tabs {
+        display: flex; gap: 0.3rem;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 0.35rem;
+        margin-bottom: 1rem; overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .mode-tabs::-webkit-scrollbar { display: none; }
+    .mode-tab {
+        flex: 1; min-width: max-content;
+        padding: 0.65rem 1rem; border-radius: 10px;
+        border: none; background: transparent;
+        color: var(--ink-3); font-family: inherit;
+        font-size: 0.82rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center;
+        gap: 0.4rem; white-space: nowrap;
+    }
+    .mode-tab:hover { color: var(--ink-2); }
+    .mode-tab.active { background: var(--ink); color: var(--bg); }
+    .composer {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); padding: 1.2rem;
+        margin-bottom: 1rem; position: relative;
+        transition: border-color 0.3s;
+    }
+    .composer:focus-within { border-color: var(--border-3); }
+    .composer-input {
+        width: 100%; min-height: 100px; padding: 0.5rem 0;
+        border: none; background: transparent; color: var(--ink);
+        font-family: inherit; font-size: 0.95rem; line-height: 1.6;
+        resize: none; outline: none;
+    }
+    .composer-input::placeholder { color: var(--ink-4); }
+    .composer-attachments {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+        margin-top: 0.8rem;
+    }
+    .attach-chip {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.4rem 0.7rem; border-radius: 20px;
+        background: var(--surface-2); border: 1px solid var(--border);
+        font-size: 0.75rem; color: var(--ink-2);
+        animation: chipIn 0.3s ease;
+    }
+    @keyframes chipIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    .attach-chip img {
+        width: 24px; height: 24px; border-radius: 6px;
+        object-fit: cover;
+    }
+    .attach-chip button {
+        background: none; border: none; color: var(--ink-3);
+        cursor: pointer; font-size: 14px; padding: 0;
+        display: flex; align-items: center;
+    }
+    .attach-chip button:hover { color: var(--error); }
+    .composer-toolbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 0.5rem; margin-top: 0.8rem;
+        padding-top: 0.8rem; border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    .composer-tools { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .tool-btn {
+        padding: 0.5rem 0.8rem; border-radius: 8px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--ink-2); font-family: inherit;
+        font-size: 0.75rem; font-weight: 500;
+        cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .tool-btn:hover { background: var(--surface-2); color: var(--ink); border-color: var(--border-2); }
+    .tool-btn.highlight {
+        background: rgba(255,255,255,0.08);
+        border-color: var(--border-3);
+        color: var(--ink);
+    }
+    .btn-generate {
+        padding: 0.7rem 1.4rem; border-radius: 10px;
+        border: none; background: var(--ink); color: var(--bg);
+        font-family: inherit; font-size: 0.85rem; font-weight: 700;
+        cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 0.5rem;
+        letter-spacing: -0.01em;
+    }
+    .btn-generate:hover:not(:disabled) { background: var(--accent-dim); transform: translateY(-1px); }
+    .btn-generate:active:not(:disabled) { transform: translateY(0); }
+    .btn-generate:disabled { opacity: 0.3; cursor: not-allowed; }
+    .settings {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); padding: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    .settings-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    @media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; } }
+    .field-label {
+        font-size: 0.7rem; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--ink-3);
+        font-weight: 600; margin-bottom: 0.5rem;
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .field-value {
+        font-size: 0.75rem; color: var(--ink); font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .duration-slider-wrap { position: relative; padding: 0.5rem 0; }
+    .duration-slider {
+        width: 100%; height: 6px; border-radius: 3px;
+        background: var(--surface-3); outline: none;
+        -webkit-appearance: none; appearance: none;
+        cursor: pointer;
+    }
+    .duration-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 20px; height: 20px; border-radius: 50%;
+        background: var(--ink); cursor: pointer;
+        border: 3px solid var(--bg);
+        box-shadow: 0 0 0 1px var(--border-3);
+        transition: transform 0.15s;
+    }
+    .duration-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+    .duration-slider::-moz-range-thumb {
+        width: 20px; height: 20px; border-radius: 50%;
+        background: var(--ink); cursor: pointer;
+        border: 3px solid var(--bg);
+        box-shadow: 0 0 0 1px var(--border-3);
+    }
+    .duration-marks {
+        display: flex; justify-content: space-between;
+        margin-top: 0.4rem; font-size: 0.65rem;
+        color: var(--ink-4); font-family: 'JetBrains Mono', monospace;
+    }
+    .format-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+    }
+    .format-btn {
+        padding: 0.7rem 0.5rem; border-radius: 10px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--ink-2); font-family: inherit;
+        font-size: 0.72rem; font-weight: 500;
+        cursor: pointer; transition: all 0.2s;
+        text-align: center;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 0.3rem;
+    }
+    .format-btn:hover { background: var(--surface-2); color: var(--ink); }
+    .format-btn.active {
+        background: var(--ink); color: var(--bg);
+        border-color: var(--ink);
+    }
+    .format-icon {
+        width: 22px; height: 22px;
+        border: 2px solid currentColor; border-radius: 3px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .format-icon.portrait { width: 14px; height: 22px; }
+    .format-icon.landscape { width: 24px; height: 14px; }
+    .format-icon.square { width: 20px; height: 20px; }
+    .format-icon.cinema { width: 26px; height: 11px; }
+    .style-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+    }
+    .style-card {
+        padding: 1rem; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--surface-2);
+        cursor: pointer; transition: all 0.25s;
+        position: relative; overflow: hidden;
+    }
+    .style-card:hover { border-color: var(--border-3); transform: translateY(-2px); }
+    .style-card.active {
+        border-color: var(--ink); background: var(--surface-3);
+        box-shadow: 0 0 0 1px var(--ink);
+    }
+    .style-card::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+        pointer-events: none;
+    }
+    .style-icon { font-size: 1.6rem; margin-bottom: 0.5rem; display: block; }
+    .style-name {
+        font-size: 0.85rem; font-weight: 600;
+        margin-bottom: 0.2rem; letter-spacing: -0.01em;
+    }
+    .style-desc { font-size: 0.68rem; color: var(--ink-3); line-height: 1.3; }
+    .quality-row { display: flex; gap: 0.4rem; }
+    .quality-btn {
+        flex: 1; padding: 0.6rem 0.4rem;
+        border-radius: 10px; border: 1px solid var(--border);
+        background: transparent; color: var(--ink-2);
+        font-family: inherit; font-size: 0.72rem;
+        font-weight: 600; cursor: pointer;
+        transition: all 0.2s; text-align: center;
+    }
+    .quality-btn:hover { background: var(--surface-2); color: var(--ink); }
+    .quality-btn.active {
+        background: var(--ink); color: var(--bg);
+        border-color: var(--ink);
+    }
+    .gallery-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 0 0.6rem;
+    }
+    .gallery-title {
+        font-size: 0.9rem; font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+    .gallery-count {
+        font-size: 0.72rem; color: var(--ink-3);
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.8rem; padding-bottom: 2rem;
+    }
+    .video-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); overflow: hidden;
+        position: relative; transition: all 0.25s;
+        animation: fadeUp 0.5s ease;
+    }
+    .video-card:hover { border-color: var(--border-3); transform: translateY(-3px); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .video-thumb {
+        position: relative; background: #000;
+        aspect-ratio: 9/16; overflow: hidden;
+    }
+    .video-thumb video {
+        width: 100%; height: 100%; object-fit: cover;
+        display: block;
+    }
+    .video-thumb img {
+        width: 100%; height: 100%; object-fit: cover;
+        display: block; cursor: zoom-in;
+    }
+    .video-badge {
+        position: absolute; top: 8px; left: 8px;
+        padding: 0.2rem 0.5rem; border-radius: 6px;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        font-size: 0.65rem; font-weight: 600;
+        color: #fff;
+    }
+    .video-actions {
+        position: absolute; top: 8px; right: 8px;
+        display: flex; gap: 4px;
+    }
+    .video-action {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        border: none; color: #fff; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; transition: all 0.2s;
+    }
+    .video-action:hover { background: rgba(255,255,255,0.15); }
+    .video-action.danger:hover { background: rgba(239,68,68,0.8); }
+    .video-action.use-prompt:hover { background: rgba(34,197,94,0.8); }
+    .video-meta { padding: 0.7rem 0.8rem; }
+    .video-title {
+        font-size: 0.75rem; font-weight: 600;
+        margin-bottom: 0.15rem;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .video-info {
+        font-size: 0.65rem; color: var(--ink-3);
+        display: flex; gap: 0.5rem; flex-wrap: wrap;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .empty {
+        text-align: center; padding: 3rem 1.5rem;
+        color: var(--ink-3);
+    }
+    .empty-icon { font-size: 2.5rem; opacity: 0.3; margin-bottom: 0.8rem; }
+    .empty-title {
+        font-size: 0.9rem; font-weight: 600;
+        color: var(--ink-2); margin-bottom: 0.3rem;
+    }
+    .empty-desc { font-size: 0.78rem; }
+    .status {
+        position: fixed; bottom: 1.5rem; left: 50%;
+        transform: translateX(-50%) translateY(120px);
+        background: rgba(22,22,22,0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-2);
+        border-radius: 14px; padding: 0.8rem 1.2rem;
+        display: flex; align-items: center; gap: 0.7rem;
+        z-index: 100; opacity: 0;
+        transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+        max-width: calc(100vw - 2rem);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .status.visible {
+        transform: translateX(-50%) translateY(0); opacity: 1;
+    }
+    .status-spinner {
+        width: 16px; height: 16px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.15);
+        border-top-color: var(--ink);
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-text {
+        font-size: 0.78rem; color: var(--ink-2);
+        font-weight: 500; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+    }
+    .toast {
+        position: fixed; top: 1.5rem; left: 50%;
+        transform: translateX(-50%) translateY(-120px);
+        background: var(--surface);
+        border: 1px solid var(--border-2);
+        color: var(--ink); padding: 0.75rem 1.2rem;
+        border-radius: 12px; font-size: 0.8rem; font-weight: 500;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        z-index: 1000; opacity: 0;
+        transition: all 0.35s;
+        max-width: calc(100vw - 2rem);
+        text-align: center;
+    }
+    .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--error); }
+    .toast.warn { border-color: var(--warn); }
+    .modal-backdrop {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 1rem; opacity: 0; pointer-events: none;
+        transition: opacity 0.25s;
+    }
+    .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
+    .modal {
+        background: var(--surface); border: 1px solid var(--border-2);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        max-width: 420px; width: 100%;
+        transform: scale(0.95); transition: transform 0.25s;
+        max-height: 90vh; overflow-y: auto;
+    }
+    .modal-backdrop.visible .modal { transform: scale(1); }
+    .modal-title {
+        font-size: 1rem; font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+    .modal-desc {
+        font-size: 0.8rem; color: var(--ink-3);
+        margin-bottom: 1.2rem; line-height: 1.5;
+    }
+    .modal-actions {
+        display: flex; gap: 0.5rem; justify-content: flex-end;
+        margin-top: 1.2rem;
+    }
+    .modal-btn {
+        padding: 0.6rem 1.1rem; border-radius: 9px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--ink); font-family: inherit;
+        font-size: 0.82rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .modal-btn:hover { background: var(--surface-2); }
+    .modal-btn.primary {
+        background: var(--ink); color: var(--bg); border-color: var(--ink);
+    }
+    .modal-btn.primary:hover { background: var(--accent-dim); }
+    .input-field {
+        width: 100%; padding: 0.8rem 1rem;
+        border-radius: 10px; border: 1px solid var(--border);
+        background: var(--bg); color: var(--ink);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.82rem; outline: none;
+        transition: border-color 0.2s;
+    }
+    .input-field:focus { border-color: var(--ink); }
+    .input-field::placeholder { color: var(--ink-4); }
+    .extend-preview {
+        display: flex; gap: 0.8rem; align-items: center;
+        padding: 0.8rem; background: var(--bg);
+        border-radius: 10px; border: 1px solid var(--border);
+        margin-bottom: 1rem;
+    }
+    .extend-preview video {
+        width: 60px; height: 90px; border-radius: 6px;
+        object-fit: cover; background: #000;
+    }
+    .extend-info { flex: 1; }
+    .extend-info-title {
+        font-size: 0.8rem; font-weight: 600; margin-bottom: 0.2rem;
+    }
+    .extend-info-desc {
+        font-size: 0.7rem; color: var(--ink-3);
+    }
+    .lightbox {
+        position: fixed; inset: 0; z-index: 300;
+        background: rgba(0,0,0,0.95);
+        display: none; align-items: center; justify-content: center;
+        padding: 1rem; cursor: zoom-out;
+    }
+    .lightbox.visible { display: flex; }
+    .lightbox img {
+        max-width: 100%; max-height: 100%;
+        object-fit: contain; border-radius: 8px;
+    }
+    .lightbox-close {
+        position: absolute; top: 1rem; right: 1rem;
+        width: 40px; height: 40px; border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff; font-size: 20px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(8px);
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+    /* Image picker modal */
+    .image-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+        max-height: 320px;
+        overflow-y: auto;
+        padding: 0.3rem;
+        border-radius: 10px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+    }
+    .image-picker-grid::-webkit-scrollbar { width: 6px; }
+    .image-picker-grid::-webkit-scrollbar-thumb { background: var(--border-3); border-radius: 3px; }
+    .image-picker-item {
+        position: relative;
+        aspect-ratio: 1/1;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        background: var(--surface-2);
+    }
+    .image-picker-item:hover { border-color: var(--ink-3); transform: scale(1.03); }
+    .image-picker-item.selected { border-color: var(--ink); }
+    .image-picker-item img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+    .image-picker-item .picker-label {
+        position: absolute; bottom: 0; left: 0; right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.8));
+        color: #fff; font-size: 0.55rem; padding: 1.2rem 0.3rem 0.3rem;
+        text-align: center;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .image-picker-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--ink-3);
+        font-size: 0.78rem;
+    }
+    @media (max-width: 640px) {
+        .hero { padding: 1.5rem 0 1rem; }
+        .composer { padding: 1rem; }
+        .settings { padding: 1rem; }
+        .gallery-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="app">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-logo">F</div>
+            <span class="brand-name">Flow Studio</span>
+        </div>
+        <div class="topbar-actions">
+            <button class="btn-icon" id="api-btn" title="Clé API">🔑</button>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1 class="hero-title">Donnez vie à vos idées</h1>
+        <p class="hero-sub">Générez des vidéos cinématographiques à partir d'un texte ou d'une image</p>
+    </div>
+
+    <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="text-to-video">
+            <span>📝</span> Texte → Vidéo
+        </button>
+        <button class="mode-tab" data-mode="image-to-video">
+            <span>🖼️</span> Image → Vidéo
+        </button>
+        <button class="mode-tab" data-mode="text-to-image">
+            <span>🎨</span> Texte → Image
+        </button>
+    </div>
+
+    <div class="composer">
+        <textarea class="composer-input" id="prompt-input"
+            placeholder="Décrivez votre vision… Un coucher de soleil sur une plage déserte, une femme qui marche au ralenti, une ville futuriste baignée de néons…"></textarea>
+        <div class="composer-attachments" id="attachments"></div>
+        <div class="composer-toolbar">
+            <div class="composer-tools">
+                <button class="tool-btn" id="attach-btn">
+                    <span>📎</span> Image
+                </button>
+                <button class="tool-btn" id="gallery-pick-btn">
+                    <span>🖼️</span> Depuis la galerie
+                </button>
+                <input type="file" id="file-input" accept="image/*" style="display:none;">
+            </div>
+            <button class="btn-generate" id="generate-btn" disabled>
+                <span>✨</span> Générer
+            </button>
+        </div>
+    </div>
+
+    <div class="settings">
+        <div class="settings-grid">
+            <div>
+                <div class="field-label">Style visuel</div>
+                <div class="style-grid">
+                    <div class="style-card active" data-style="cinematic">
+                        <span class="style-icon">🎬</span>
+                        <div class="style-name">Cinématique</div>
+                        <div class="style-desc">Rendu film, grain 35mm, color grading</div>
+                    </div>
+                    <div class="style-card" data-style="pixar">
+                        <span class="style-icon">✨</span>
+                        <div class="style-name">3D Pixar</div>
+                        <div class="style-desc">Animation 3D, textures douces, éclairage cartoon</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="field-label">Qualité</div>
+                <div class="quality-row">
+                    <button class="quality-btn" data-quality="standard">Standard</button>
+                    <button class="quality-btn active" data-quality="high">Haute</button>
+                    <button class="quality-btn" data-quality="cinematic">Cinéma</button>
+                </div>
+            </div>
+            <div>
+                <div class="field-label">
+                    Durée
+                    <span class="field-value" id="duration-value">6.4s</span>
+                </div>
+                <div class="duration-slider-wrap">
+                    <input type="range" class="duration-slider" id="duration-slider"
+                        min="5" max="18" step="0.1" value="6.4">
+                    <div class="duration-marks">
+                        <span>5s</span><span>10s</span><span>15s</span><span>18s</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="field-label">Format</div>
+                <div class="format-grid">
+                    <button class="format-btn active" data-format="portrait">
+                        <div class="format-icon portrait"></div>
+                        9:16
+                    </button>
+                    <button class="format-btn" data-format="landscape">
+                        <div class="format-icon landscape"></div>
+                        16:9
+                    </button>
+                    <button class="format-btn" data-format="square">
+                        <div class="format-icon square"></div>
+                        1:1
+                    </button>
+                    <button class="format-btn" data-format="cinema">
+                        <div class="format-icon cinema"></div>
+                        21:9
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="gallery-header">
+        <div class="gallery-title">Vos créations</div>
+        <div class="gallery-count" id="gallery-count">0 élément</div>
+    </div>
+
+    <div class="gallery-grid" id="gallery-grid">
+        <div class="empty" style="grid-column: 1 / -1;">
+            <div class="empty-icon">🎬</div>
+            <div class="empty-title">Aucune création pour l'instant</div>
+            <div class="empty-desc">Vos vidéos et images apparaîtront ici</div>
+        </div>
+    </div>
+</div>
+
+<div class="status" id="status-bar">
+    <div class="status-spinner"></div>
+    <span class="status-text" id="status-text">Préparation…</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-backdrop" id="api-modal">
+    <div class="modal">
+        <div class="modal-title">🔑 Clé API Agnes</div>
+        <div class="modal-desc">
+            Collez votre clé API pour activer la génération. Obtenez-en une gratuite sur
+            <strong>platform.agnes-ai.com</strong>
+        </div>
+        <input type="password" class="input-field" id="api-input"
+            placeholder="sk-..." autocomplete="off" spellcheck="false">
+        <div class="modal-actions">
+            <button class="modal-btn" id="api-cancel">Annuler</button>
+            <button class="modal-btn primary" id="api-save">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="extend-modal">
+    <div class="modal">
+        <div class="modal-title">🔗 Prolonger la vidéo</div>
+        <div class="modal-desc">
+            La dernière image de cette vidéo servira de point de départ pour une nouvelle séquence.
+        </div>
+        <div class="extend-preview">
+            <video id="extend-video" muted playsinline></video>
+            <div class="extend-info">
+                <div class="extend-info-title" id="extend-title">Vidéo</div>
+                <div class="extend-info-desc">Nouvelle séquence de <span id="extend-duration">6.4</span>s</div>
+            </div>
+        </div>
+        <textarea class="composer-input" id="extend-prompt"
+            placeholder="Décrivez la suite… (optionnel)"
+            style="min-height:70px;border:1px solid var(--border);border-radius:10px;padding:0.8rem;background:var(--bg);"></textarea>
+        <div class="modal-actions">
+            <button class="modal-btn" id="extend-cancel">Annuler</button>
+            <button class="modal-btn primary" id="extend-confirm">Prolonger</button>
+        </div>
+    </div>
+</div>
+
+<!-- Image Picker Modal -->
+<div class="modal-backdrop" id="image-picker-modal">
+    <div class="modal">
+        <div class="modal-title">🖼️ Choisir une image</div>
+        <div class="modal-desc">
+            Sélectionnez une image de votre galerie pour l'utiliser comme référence dans votre prompt.
+        </div>
+        <div class="image-picker-grid" id="image-picker-grid"></div>
+        <div class="modal-actions">
+            <button class="modal-btn" id="image-picker-cancel">Annuler</button>
+            <button class="modal-btn primary" id="image-picker-confirm" disabled>Utiliser cette image</button>
+        </div>
+    </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightbox-close">✕</button>
+    <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════════
+const API_BASE = 'https://apihub.agnes-ai.com/v1';
+const POLL_BASE = 'https://apihub.agnes-ai.com/agnesapi';
+const VIDEO_MODEL = 'agnes-video-v2.0';
+const IMAGE_MODEL = 'agnes-image-2.1-flash';
+const FRAME_RATE = 24;
+const POLL_INTERVAL = 8;
+const MAX_POLLS = 120;
+const STORAGE_KEY = 'flow_studio_api';
+const GALLERY_KEY = 'flow_studio_gallery';
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+const state = {
+    mode: 'text-to-video',
+    style: 'cinematic',
+    quality: 'high',
+    duration: 6.4,
+    format: 'portrait',
+    image: null,
+    isRunning: false,
+    stopRequested: false,
+    videos: [],
+    extendTarget: null,
+    pickerSelectedIndex: null
+};
+
+// ══════════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const log = m => console.log('[Flow] ' + m);
+
+function toast(msg, type = 'success', dur = 2800) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    requestAnimationFrame(() => t.classList.add('visible'));
+    setTimeout(() => t.classList.remove('visible'), dur);
+}
+
+function setStatus(text) {
+    const bar = $('status-bar'), txt = $('status-text');
+    if (text) { bar.classList.add('visible'); txt.textContent = text; }
+    else bar.classList.remove('visible');
+}
+
+function getKey() {
+    try { return (localStorage.getItem(STORAGE_KEY) || '').trim(); } catch { return ''; }
+}
+
+function framesFromSeconds(sec) {
+    let n = Math.round((sec * FRAME_RATE - 1) / 8);
+    n = Math.max(0, Math.min(n, 55));
+    return n * 8 + 1;
+}
+
+function updateGenerateBtn() {
+    const btn = $('generate-btn');
+    const key = getKey();
+    const prompt = $('prompt-input').value.trim();
+    const needImage = state.mode === 'image-to-video';
+    const hasImage = !!state.image;
+    const hasInput = prompt || (needImage && hasImage);
+
+    btn.disabled = !key || !hasInput || (needImage && !hasImage) || state.isRunning;
+    if (state.isRunning) btn.innerHTML = '<span>⏳</span> Génération…';
+    else btn.innerHTML = '<span>✨</span> Générer';
+}
+
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CORS-FRIENDLY IMAGE FETCH
+// ══════════════════════════════════════════════════════════════════
+function blobToDataUri(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function urlToDataUri(url) {
+    if (!url) throw new Error('URL vide');
+    if (url.startsWith('data:')) return url;
+
+    // 1) Tentative directe
+    try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (res.ok) {
+            const blob = await res.blob();
+            return await blobToDataUri(blob);
+        }
+    } catch (e) {
+        log('Fetch direct échoué: ' + e.message);
+    }
+
+    // 2) Proxies CORS publics en cascade
+    const proxies = [
+        u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+        u => `https://images.weserv.nl/?url=${encodeURIComponent(u.replace(/^https?:\/\//, ''))}`,
+        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        u => `https://thingproxy.freeboard.io/fetch/${u}`
+    ];
+
+    for (const makeProxy of proxies) {
+        try {
+            const proxyUrl = makeProxy(url);
+            log('Essai proxy: ' + proxyUrl.slice(0, 80));
+            const res = await fetch(proxyUrl);
+            if (!res.ok) continue;
+            const blob = await res.blob();
+            if (blob.size === 0) continue;
+            return await blobToDataUri(blob);
+        } catch (e) {
+            log('Proxy échoué: ' + e.message);
+        }
+    }
+
+    throw new Error('Impossible de récupérer l\'image (CORS). Ouvrez l\'app via http://localhost.');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NORMALISATION DE L'IMAGE DE RÉFÉRENCE
+// Redimensionne l'image source aux dimensions exactes du format choisi
+// ══════════════════════════════════════════════════════════════════
+function normalizeImageForFormat(dataUri, format) {
+    const targetSize = {
+        portrait:  { w: 768,  h: 1344 },
+        landscape: { w: 1344, h: 768  },
+        square:    { w: 1024, h: 1024 },
+        cinema:    { w: 1536, h: 640  }
+    }[format] || { w: 1024, h: 1024 };
+
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = targetSize.w;
+                canvas.height = targetSize.h;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Cover : remplit sans déformer, recadre au centre
+                const scale = Math.max(targetSize.w / img.width, targetSize.h / img.height);
+                const w = img.width * scale;
+                const h = img.height * scale;
+                const x = (targetSize.w - w) / 2;
+                const y = (targetSize.h - h) / 2;
+                ctx.drawImage(img, x, y, w, h);
+
+                resolve(canvas.toDataURL('image/jpeg', 0.95));
+            } catch (e) {
+                log('Normalisation échouée: ' + e.message);
+                resolve(dataUri);
+            }
+        };
+        img.onerror = () => resolve(dataUri);
+        img.src = dataUri;
+    });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GALLERY PERSISTENCE
+// ══════════════════════════════════════════════════════════════════
+function saveGallery() {
+    try {
+        const data = state.videos.map(v => ({
+            url: v.url, title: v.title, duration: v.duration,
+            format: v.format, style: v.style, isImage: v.isImage || false,
+            timestamp: v.timestamp
+        }));
+        localStorage.setItem(GALLERY_KEY, JSON.stringify(data));
+    } catch (e) { log('Erreur sauvegarde: ' + e.message); }
+}
+
+function loadGallery() {
+    try {
+        const data = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
+        state.videos = data;
+    } catch (e) { state.videos = []; }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI — MODE TABS
+// ══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        state.mode = tab.dataset.mode;
+        $('attach-btn').style.display =
+            (state.mode === 'image-to-video') ? 'flex' : 'none';
+        $('gallery-pick-btn').style.display =
+            (state.mode === 'image-to-video') ? 'flex' : 'none';
+        if (state.mode === 'text-to-video') {
+            state.image = null;
+            renderAttachments();
+        }
+        updateGenerateBtn();
+    });
+});
+
+// ══════════════════════════════════════════════════════════════════
+// UI — STYLE / QUALITY / FORMAT
+// ══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.style-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        state.style = card.dataset.style;
+    });
+});
+
+document.querySelectorAll('.quality-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.quality = btn.dataset.quality;
+    });
+});
+
+document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.format = btn.dataset.format;
+    });
+});
+
+// ══════════════════════════════════════════════════════════════════
+// UI — DURATION SLIDER
+// ══════════════════════════════════════════════════════════════════
+const durationSlider = $('duration-slider');
+function updateSliderBg() {
+    const pct = ((state.duration - 5) / 13) * 100;
+    durationSlider.style.background = `linear-gradient(90deg, var(--ink) 0%, var(--ink) ${pct}%, var(--surface-3) ${pct}%, var(--surface-3) 100%)`;
+}
+durationSlider.addEventListener('input', e => {
+    state.duration = parseFloat(e.target.value);
+    $('duration-value').textContent = state.duration.toFixed(1) + 's';
+    updateSliderBg();
+});
+updateSliderBg();
+
+// ══════════════════════════════════════════════════════════════════
+// UI — ATTACHMENTS
+// ══════════════════════════════════════════════════════════════════
+$('attach-btn').addEventListener('click', () => $('file-input').click());
+$('file-input').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 15 * 1024 * 1024) { toast('Image trop lourde (max 15 Mo)', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+        state.image = ev.target.result;
+        renderAttachments();
+        updateGenerateBtn();
+        toast('Image ajoutée ✓');
+    };
+    reader.readAsDataURL(f);
+    e.target.value = '';
+});
+
+function renderAttachments() {
+    const c = $('attachments');
+    if (!state.image) { c.innerHTML = ''; return; }
+    c.innerHTML = `
+        <div class="attach-chip">
+            <img src="${state.image}" alt="">
+            <span>image source</span>
+            <button id="remove-img">✕</button>
+        </div>
+    `;
+    $('remove-img').addEventListener('click', () => {
+        state.image = null;
+        renderAttachments();
+        updateGenerateBtn();
+    });
+}
+
+$('prompt-input').addEventListener('input', updateGenerateBtn);
+
+// ══════════════════════════════════════════════════════════════════
+// UI — IMAGE PICKER (depuis la galerie)
+// ══════════════════════════════════════════════════════════════════
+$('gallery-pick-btn').addEventListener('click', () => {
+    const images = state.videos.filter(v => v.isImage);
+    const grid = $('image-picker-grid');
+    state.pickerSelectedIndex = null;
+    $('image-picker-confirm').disabled = true;
+
+    if (images.length === 0) {
+        grid.innerHTML = `
+            <div class="image-picker-empty">
+                <div style="font-size:1.8rem;margin-bottom:0.4rem;opacity:0.4;">🖼️</div>
+                Aucune image dans la galerie.<br>Générez d'abord une image en mode "Texte → Image".
+            </div>
+        `;
+    } else {
+        grid.innerHTML = images.map((v) => {
+            const globalIndex = state.videos.indexOf(v);
+            return `
+                <div class="image-picker-item" data-index="${globalIndex}">
+                    <img src="${v.url}" alt="${escapeHtml(v.title)}" loading="lazy">
+                    <div class="picker-label">${escapeHtml(v.title.slice(0, 20))}</div>
+                </div>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.image-picker-item').forEach(item => {
+            item.addEventListener('click', () => {
+                grid.querySelectorAll('.image-picker-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+                state.pickerSelectedIndex = parseInt(item.dataset.index, 10);
+                $('image-picker-confirm').disabled = false;
+            });
+        });
+    }
+
+    $('image-picker-modal').classList.add('visible');
+});
+
+$('image-picker-cancel').addEventListener('click', () => {
+    $('image-picker-modal').classList.remove('visible');
+});
+
+$('image-picker-confirm').addEventListener('click', async () => {
+    if (state.pickerSelectedIndex === null) return;
+    const img = state.videos[state.pickerSelectedIndex];
+    if (!img || !img.isImage) return;
+
+    try {
+        setStatus('Récupération de l\'image…');
+        state.image = await urlToDataUri(img.url);
+        setStatus(null);
+
+        if (state.mode !== 'image-to-video') {
+            document.querySelectorAll('.mode-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.mode === 'image-to-video');
+            });
+            state.mode = 'image-to-video';
+            $('attach-btn').style.display = 'flex';
+            $('gallery-pick-btn').style.display = 'flex';
+        }
+
+        renderAttachments();
+        updateGenerateBtn();
+        $('image-picker-modal').classList.remove('visible');
+        toast('Image de la galerie utilisée ✓');
+    } catch (e) {
+        setStatus(null);
+        toast('Erreur : ' + e.message.slice(0, 100), 'error', 6000);
+    }
+});
+
+$('image-picker-modal').addEventListener('click', e => {
+    if (e.target === $('image-picker-modal')) $('image-picker-modal').classList.remove('visible');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// UI — API MODAL
+// ══════════════════════════════════════════════════════════════════
+$('api-btn').addEventListener('click', () => {
+    $('api-input').value = getKey();
+    $('api-modal').classList.add('visible');
+});
+$('api-cancel').addEventListener('click', () => $('api-modal').classList.remove('visible'));
+$('api-save').addEventListener('click', () => {
+    const val = $('api-input').value.trim();
+    if (val) {
+        localStorage.setItem(STORAGE_KEY, val);
+        toast('Clé API enregistrée ✓');
+    } else {
+        localStorage.removeItem(STORAGE_KEY);
+        toast('Clé supprimée');
+    }
+    $('api-modal').classList.remove('visible');
+    updateGenerateBtn();
+});
+$('api-modal').addEventListener('click', e => {
+    if (e.target === $('api-modal')) $('api-modal').classList.remove('visible');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// LIGHTBOX
+// ══════════════════════════════════════════════════════════════════
+function openLightbox(url) {
+    $('lightbox-img').src = url;
+    $('lightbox').classList.add('visible');
+}
+$('lightbox-close').addEventListener('click', () => $('lightbox').classList.remove('visible'));
+$('lightbox').addEventListener('click', e => {
+    if (e.target === $('lightbox')) $('lightbox').classList.remove('visible');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// PROMPT BUILDERS
+// ══════════════════════════════════════════════════════════════════
+const STYLE_PROMPTS = {
+    cinematic: 'Cinematic film production, shot on 35mm film, professional color grading, shallow depth of field, anamorphic lens characteristics, subtle film grain, dramatic cinematic lighting, Hollywood production quality.',
+    pixar: 'Pixar 3D animation style, high-quality 3D rendering, subsurface scattering, soft global illumination, expressive character design, vibrant but soft color palette, Disney-Pixar aesthetic, family-friendly animated look.'
+};
+
+const QUALITY_PROMPTS = {
+    standard: 'Standard quality output, clean and clear.',
+    high: 'High quality rendering, sharp details, fine textures, enhanced clarity.',
+    cinematic: 'Maximum cinematic quality, film-grade rendering, professional post-production look, optimal visual fidelity, detailed textures and lighting.'
+};
+
+const FORMAT_PROMPTS = {
+    portrait: 'Vertical 9:16 portrait format, optimized for mobile screens.',
+    landscape: 'Horizontal 16:9 widescreen format, cinematic landscape framing.',
+    square: 'Square 1:1 format, centered composition.',
+    cinema: 'Cinematic 21:9 anamorphic widescreen, film letterbox.'
+};
+
+function buildVideoPrompt(userPrompt) {
+    const isPixar = state.style === 'pixar';
+    const isI2V = state.mode === 'image-to-video' && state.image;
+
+    if (isI2V) {
+        // ═══ MODE IMAGE → VIDÉO : préservation stricte de la référence ═══
+        const parts = [
+            'STRICT IMAGE-TO-VIDEO ANIMATION.',
+            'The provided reference image MUST be preserved EXACTLY as the first frame and throughout the entire video.',
+            'DO NOT alter, restyle, recolor, regenerate, or reimagine the image in any way.',
+            '',
+            'PRESERVE UNCHANGED:',
+            '- the exact subject (same face, same features, same identity)',
+            '- the exact clothing and accessories',
+            '- the exact background and environment',
+            '- the exact lighting, colors, contrast and grading',
+            '- the exact composition, framing and camera angle',
+            '- the exact style, medium and rendering of the source',
+            '',
+            'ONLY add subtle, natural, realistic motion:',
+            '- slight breathing, blinking, micro-expressions',
+            '- gentle head or body movement',
+            '- subtle hair, cloth or environment motion (wind, particles)',
+            '- slow cinematic camera push-in / parallax (optional)',
+            '',
+            'DO NOT: change the art style, add new elements, remove elements, change colors, morph the face, introduce text, add watermarks, change the aspect ratio.',
+            ''
+        ];
+
+        if (userPrompt) {
+            parts.push('Additional motion direction (must not violate the preservation rules above): ' + userPrompt);
+        }
+
+        parts.push('Maintain the original visual style of the reference image. ' + FORMAT_PROMPTS[state.format]);
+        parts.push('Output must start with the reference image as the first frame, pixel-faithful.');
+
+        return parts.join(' ');
+    }
+
+    // ═══ MODE TEXTE → VIDÉO : comportement normal ═══
+    const parts = [];
+    parts.push(STYLE_PROMPTS[state.style]);
+    parts.push(QUALITY_PROMPTS[state.quality]);
+    if (userPrompt) parts.push(userPrompt);
+    parts.push('Smooth natural motion, 24fps, ' + FORMAT_PROMPTS[state.format]);
+    parts.push('No text overlays, no subtitles, no watermarks.');
+    if (isPixar) parts.push('Consistent character design, family-friendly animation.');
+    return parts.join(' ');
+}
+
+function buildImagePrompt(userPrompt) {
+    const parts = [];
+    parts.push(STYLE_PROMPTS[state.style]);
+    parts.push(QUALITY_PROMPTS[state.quality]);
+    if (userPrompt) parts.push(userPrompt);
+    parts.push(FORMAT_PROMPTS[state.format]);
+    parts.push('High resolution, professional composition, no text, no watermarks.');
+    return parts.join(' ');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// API FETCH
+// ══════════════════════════════════════════════════════════════════
+async function apiFetch(url, opts = {}, label = 'API') {
+    for (let a = 0; a < 7; a++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        try {
+            const r = await fetch(url, opts);
+            if (r.status === 429) {
+                const w = [15, 30, 45, 60, 90, 120, 180][Math.min(a, 6)];
+                setStatus(`Limite atteinte, attente ${w}s…`);
+                await sleep(w * 1000);
+                continue;
+            }
+            if (r.status === 503) {
+                const w = [5, 10, 15, 20, 30, 45][Math.min(a, 5)];
+                setStatus(`Service occupé, attente ${w}s…`);
+                await sleep(w * 1000);
+                continue;
+            }
+            return r;
+        } catch (e) {
+            if (e.message === 'Arrêt demandé') throw e;
+            const w = [3, 5, 8, 12, 20, 30][Math.min(a, 5)];
+            setStatus(`Connexion… ${w}s`);
+            await sleep(w * 1000);
+        }
+    }
+    return fetch(url, opts);
+}
+
+async function createVideoTask(prompt, imageDataUri = null) {
+    const body = {
+        model: VIDEO_MODEL,
+        prompt: prompt,
+        num_frames: framesFromSeconds(state.duration),
+        frame_rate: FRAME_RATE
+    };
+
+    if (imageDataUri) {
+        // Normaliser l'image au format choisi pour garantir la fidélité
+        const normalized = await normalizeImageForFormat(imageDataUri, state.format);
+        const pureBase64 = normalized.includes(',')
+            ? normalized.split(',')[1]
+            : normalized;
+
+        const mimeMatch = normalized.match(/^data:(image\/[a-z+]+);base64,/i);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+        // ─── Paramètres de préservation maximale ───
+        body.image = pureBase64;
+        body.image_format = mime;
+        body.image_weight = 1.0;
+        body.strength = 0.15;
+        body.init_image_strength = 1.0;
+        body.preserve_subject = true;
+        body.consistency = 'high';
+        body.motion_strength = 0.4;
+        body.guidance_scale = 9.5;
+        body.seed = Math.floor(Math.random() * 1e9);
+    }
+
+    const r = await apiFetch(`${API_BASE}/videos`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getKey()}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!r.ok) {
+        const err = await r.text();
+        throw new Error(`HTTP ${r.status} — ${err.slice(0, 180)}`);
+    }
+    const d = await r.json();
+    const id = d.video_id || d.id || d.task_id;
+    if (!id) throw new Error('Pas de video_id retourné');
+    return id;
+}
+
+async function createImageTask(prompt) {
+    const sizeMap = {
+        portrait: '1024x1792',
+        landscape: '1792x1024',
+        cinema: '1792x768',
+        square: '1024x1024'
+    };
+
+    const r = await apiFetch(`${API_BASE}/images/generations`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getKey()}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: IMAGE_MODEL,
+            prompt: prompt,
+            n: 1,
+            size: sizeMap[state.format] || '1024x1024',
+            response_format: 'b64_json'
+        })
+    });
+
+    if (!r.ok) {
+        const err = await r.text();
+        throw new Error(`HTTP ${r.status} — ${err.slice(0, 180)}`);
+    }
+    const d = await r.json();
+
+    // Cas 1 : base64 renvoyé directement
+    const b64 = d.data?.[0]?.b64_json;
+    if (b64) {
+        return 'data:image/png;base64,' + b64;
+    }
+
+    // Cas 2 : URL renvoyée → on la convertit en data URI via proxy
+    const url = d.data?.[0]?.url || d.url;
+    if (!url) throw new Error("Pas d'image retournée");
+
+    return await urlToDataUri(url);
+}
+
+async function pollVideo(videoId, onProgress) {
+    let wait = 25;
+    while (wait > 0) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        onProgress(`Préparation… ${wait}s`);
+        await sleep(1000);
+        wait--;
+    }
+    for (let a = 0; a < MAX_POLLS; a++) {
+        if (state.stopRequested) throw new Error('Arrêt demandé');
+        if (a > 0) {
+            let r = POLL_INTERVAL;
+            while (r > 0) {
+                if (state.stopRequested) throw new Error('Arrêt demandé');
+                onProgress(`Rendu en cours… ${r}s`);
+                await sleep(1000);
+                r--;
+            }
+        }
+        const url = `${POLL_BASE}?video_id=${encodeURIComponent(videoId)}&model_name=${encodeURIComponent(VIDEO_MODEL)}`;
+        const r = await apiFetch(url, {
+            headers: { 'Authorization': `Bearer ${getKey()}` }
+        });
+        const d = await r.json();
+        const st = d.status || 'unknown';
+        const pg = d.progress || 0;
+        onProgress(`Création… ${pg}%`);
+        if (st === 'completed' || st === 'succeeded' || st === 'done') {
+            const vUrl = d.metadata?.url || d.url || d.output?.url;
+            if (!vUrl) throw new Error('Terminé mais URL manquante');
+            return vUrl;
+        }
+        if (st === 'failed' || st === 'error' || st === 'cancelled') {
+            throw new Error(`Échec (${st})`);
+        }
+    }
+    throw new Error('Délai dépassé');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EXTRACT LAST FRAME (avec fallback proxy CORS)
+// ══════════════════════════════════════════════════════════════════
+async function extractLastFrame(videoUrl) {
+    log('Téléchargement de la vidéo…');
+    let blob;
+    try {
+        const res = await fetch(videoUrl, { mode: 'cors' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        blob = await res.blob();
+    } catch (e) {
+        log('Fetch direct vidéo échoué, tentative via proxy…');
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(videoUrl)}`;
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error('Impossible de télécharger la vidéo (HTTP ' + res.status + ')');
+        blob = await res.blob();
+    }
+
+    const blobUrl = URL.createObjectURL(blob);
+
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.crossOrigin = 'anonymous';
+
+        const cleanup = () => {
+            try { URL.revokeObjectURL(blobUrl); } catch (e) {}
+        };
+
+        video.addEventListener('loadedmetadata', () => {
+            log('Vidéo chargée, durée: ' + video.duration.toFixed(2) + 's');
+            video.currentTime = Math.max(0, video.duration - 0.05);
+        });
+
+        video.addEventListener('seeked', () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUri = canvas.toDataURL('image/jpeg', 0.92);
+                cleanup();
+                resolve(dataUri);
+            } catch (e) {
+                cleanup();
+                reject(e);
+            }
+        });
+
+        video.addEventListener('error', () => {
+            cleanup();
+            reject(new Error('Erreur lecture vidéo locale'));
+        });
+
+        video.src = blobUrl;
+    });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GALLERY RENDER
+// ══════════════════════════════════════════════════════════════════
+function renderGallery() {
+    const grid = $('gallery-grid');
+    const count = state.videos.length;
+
+    $('gallery-count').textContent = count + ' élément' + (count > 1 ? 's' : '');
+
+    if (count === 0) {
+        grid.innerHTML = `
+            <div class="empty" style="grid-column: 1 / -1;">
+                <div class="empty-icon">🎬</div>
+                <div class="empty-title">Aucune création pour l'instant</div>
+                <div class="empty-desc">Vos vidéos et images apparaîtront ici</div>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = state.videos.map((v, i) => {
+        const aspect = v.format === 'portrait' ? '9/16'
+            : v.format === 'landscape' ? '16/9'
+            : v.format === 'cinema' ? '21/9'
+            : '1/1';
+
+        const mediaHtml = v.isImage
+            ? `<img src="${v.url}" alt="${escapeHtml(v.title)}" data-action="zoom" data-index="${i}">`
+            : `<video src="${v.url}" muted playsinline preload="metadata"
+                 onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"></video>`;
+
+        const badge = v.isImage ? '🖼️ Image' : `${v.duration.toFixed(1)}s`;
+
+        const useInPromptBtn = v.isImage
+            ? `<button class="video-action use-prompt" data-action="useInPrompt" data-index="${i}" title="Utiliser dans le prompt">✏️</button>`
+            : '';
+
+        return `
+            <div class="video-card" data-index="${i}">
+                <div class="video-thumb" style="aspect-ratio:${aspect};">
+                    ${mediaHtml}
+                    <div class="video-badge">${badge}</div>
+                    <div class="video-actions">
+                        ${useInPromptBtn}
+                        ${!v.isImage ? `<button class="video-action" data-action="extend" data-index="${i}" title="Prolonger">🔗</button>` : ''}
+                        <button class="video-action" data-action="download" data-index="${i}" title="Télécharger">⬇</button>
+                        <button class="video-action danger" data-action="delete" data-index="${i}" title="Supprimer">✕</button>
+                    </div>
+                </div>
+                <div class="video-meta">
+                    <div class="video-title">${escapeHtml(v.title)}</div>
+                    <div class="video-info">
+                        <span>${v.style === 'pixar' ? '✨ Pixar' : '🎬 Ciné'}</span>
+                        <span>·</span>
+                        <span>${v.format}</span>
+                        <span>·</span>
+                        <span>${v.isImage ? 'Image' : 'Vidéo'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    grid.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.index, 10);
+            const action = btn.dataset.action;
+            if (action === 'delete') deleteVideo(idx);
+            else if (action === 'download') downloadVideo(idx);
+            else if (action === 'extend') openExtend(idx);
+            else if (action === 'zoom') openLightbox(state.videos[idx].url);
+            else if (action === 'useInPrompt') useImageInPrompt(idx);
+        });
+    });
+}
+
+// Utiliser une image de la galerie comme image source pour le prompt
+async function useImageInPrompt(index) {
+    const img = state.videos[index];
+    if (!img || !img.isImage) return;
+
+    try {
+        setStatus('Récupération de l\'image…');
+        state.image = await urlToDataUri(img.url);
+        setStatus(null);
+
+        if (state.mode !== 'image-to-video') {
+            document.querySelectorAll('.mode-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.mode === 'image-to-video');
+            });
+            state.mode = 'image-to-video';
+            $('attach-btn').style.display = 'flex';
+            $('gallery-pick-btn').style.display = 'flex';
+        }
+
+        renderAttachments();
+        updateGenerateBtn();
+
+        $('prompt-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        $('prompt-input').focus();
+
+        toast('Image prête à être utilisée dans le prompt ✓');
+    } catch (e) {
+        setStatus(null);
+        toast('Erreur : ' + e.message.slice(0, 100), 'error', 6000);
+    }
+}
+
+function addVideo(url, title) {
+    state.videos.unshift({
+        url, title,
+        duration: state.duration,
+        format: state.format,
+        style: state.style,
+        isImage: false,
+        timestamp: Date.now()
+    });
+    saveGallery();
+    renderGallery();
+}
+
+function addImageToGallery(url, title) {
+    state.videos.unshift({
+        url, title,
+        duration: 0,
+        format: state.format,
+        style: state.style,
+        isImage: true,
+        timestamp: Date.now()
+    });
+    saveGallery();
+    renderGallery();
+}
+
+function deleteVideo(index) {
+    if (!confirm('Supprimer cette création ?')) return;
+    state.videos.splice(index, 1);
+    saveGallery();
+    renderGallery();
+    toast('Élément supprimé');
+}
+
+function downloadVideo(index) {
+    const v = state.videos[index];
+    if (!v) return;
+    const a = document.createElement('a');
+    a.href = v.url;
+    const ext = v.isImage ? 'png' : 'mp4';
+    a.download = `flow_${v.style}_${Date.now()}.${ext}`;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EXTEND VIDEO
+// ══════════════════════════════════════════════════════════════════
+function openExtend(index) {
+    const v = state.videos[index];
+    if (!v || v.isImage) return;
+    state.extendTarget = { index, video: v };
+    $('extend-video').src = v.url;
+    $('extend-title').textContent = v.title;
+    $('extend-duration').textContent = state.duration.toFixed(1);
+    $('extend-prompt').value = '';
+    $('extend-modal').classList.add('visible');
+}
+
+$('extend-cancel').addEventListener('click', () => {
+    $('extend-modal').classList.remove('visible');
+    $('extend-video').src = '';
+    state.extendTarget = null;
+});
+
+$('extend-confirm').addEventListener('click', async () => {
+    if (!state.extendTarget) return;
+    const { video } = state.extendTarget;
+    const userPrompt = $('extend-prompt').value.trim();
+    $('extend-modal').classList.remove('visible');
+
+    state.isRunning = true;
+    state.stopRequested = false;
+    updateGenerateBtn();
+    setStatus('Téléchargement de la vidéo source…');
+
+    try {
+        const lastFrameDataUri = await extractLastFrame(video.url);
+        log('Dernière frame extraite : ' + lastFrameDataUri.slice(0, 50) + '…');
+
+        // Normaliser la frame au format courant
+        const normalized = await normalizeImageForFormat(lastFrameDataUri, state.format);
+        const pureBase64 = normalized.split(',')[1];
+        if (!pureBase64) throw new Error('Extraction base64 échouée');
+        log('Base64 pur : ' + pureBase64.length + ' caractères');
+
+        const extensionPrompt = buildVideoPrompt(
+            (userPrompt || 'Continue the scene naturally with minimal motion.') +
+            ' STRICT: the first frame of this clip MUST be identical to the provided reference frame. Do not restyle, do not recolor, do not change the subject.'
+        );
+
+        setStatus('Création de la tâche d\'extension…');
+
+        const body = {
+            model: VIDEO_MODEL,
+            prompt: extensionPrompt,
+            num_frames: framesFromSeconds(state.duration),
+            frame_rate: FRAME_RATE,
+            image: pureBase64,
+            image_weight: 1.0,
+            strength: 0.15,
+            init_image_strength: 1.0,
+            preserve_subject: true,
+            consistency: 'high',
+            motion_strength: 0.4,
+            guidance_scale: 9.5
+        };
+
+        log('Envoi de la requête d\'extension…');
+
+        const r = await apiFetch(`${API_BASE}/videos`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getKey()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!r.ok) {
+            const errText = await r.text();
+            throw new Error(`HTTP ${r.status} — ${errText.slice(0, 180)}`);
+        }
+
+        const d = await r.json();
+        const videoId = d.video_id || d.id || d.task_id;
+        if (!videoId) throw new Error('Pas de video_id retourné');
+        log('Tâche d\'extension créée : ' + String(videoId).slice(0, 30) + '…');
+
+        const newUrl = await pollVideo(videoId, p => setStatus(p));
+        log('Extension terminée : ' + newUrl);
+
+        addVideo(newUrl, `Extension · ${video.title}`);
+        setStatus('✓ Extension terminée');
+        toast('Vidéo prolongée ✓');
+        await sleep(2500);
+
+    } catch (e) {
+        log('Erreur extension: ' + e.message);
+        toast('Erreur : ' + e.message.slice(0, 100), 'error', 6000);
+    } finally {
+        state.isRunning = false;
+        state.stopRequested = false;
+        setStatus(null);
+        updateGenerateBtn();
+        state.extendTarget = null;
+        $('extend-video').src = '';
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// GENERATE
+// ══════════════════════════════════════════════════════════════════
+$('generate-btn').addEventListener('click', async () => {
+    if (state.isRunning) return;
+    if (!getKey()) {
+        toast('Ajoutez votre clé API', 'error');
+        $('api-modal').classList.add('visible');
+        return;
+    }
+
+    const userPrompt = $('prompt-input').value.trim();
+    state.isRunning = true;
+    state.stopRequested = false;
+    updateGenerateBtn();
+
+    try {
+        if (state.mode === 'text-to-image') {
+            setStatus('Génération de l\'image…');
+            const prompt = buildImagePrompt(userPrompt);
+            const url = await createImageTask(prompt);
+
+            addImageToGallery(url, userPrompt.slice(0, 40) || 'Image générée');
+            setStatus('✓ Image générée');
+            toast('Image générée ✓ — Utilisez ✏️ pour la mettre dans le prompt');
+            await sleep(2500);
+
+        } else {
+            setStatus('Création de la tâche…');
+            const prompt = buildVideoPrompt(userPrompt);
+            log('Prompt: ' + prompt.slice(0, 200) + '…');
+
+            const imageForTask = (state.mode === 'image-to-video' && state.image) ? state.image : null;
+            const videoId = await createVideoTask(prompt, imageForTask);
+            const url = await pollVideo(videoId, p => setStatus(p));
+
+            const title = userPrompt.slice(0, 50) || 'Création';
+            addVideo(url, title);
+            setStatus('✓ Vidéo générée');
+            toast('Vidéo générée ✓');
+            await sleep(2500);
+        }
+    } catch (e) {
+        if (e.message === 'Arrêt demandé') toast('Génération arrêtée', 'warn');
+        else {
+            log('Erreur: ' + e.message);
+            toast('Erreur : ' + e.message.slice(0, 80), 'error', 5000);
+        }
+    } finally {
+        state.isRunning = false;
+        state.stopRequested = false;
+        setStatus(null);
+        updateGenerateBtn();
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+(function init() {
+    loadGallery();
+    renderGallery();
+    updateGenerateBtn();
+    $('attach-btn').style.display = 'none';
+    $('gallery-pick-btn').style.display = 'none';
+
+    $('prompt-input').addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            $('generate-btn').click();
+        }
+    });
+
+    log('Flow Studio prêt — utilisez ✏️ sur une image pour l\'injecter dans le prompt');
+})();
+</script>
+
+</body>
+</html>
