@@ -66,7 +66,7 @@
     .btn-icon:hover { background: var(--surface-2); border-color: var(--border-2); }
     .model-toggle {
         display: flex; align-items: center; gap: 0.5rem;
-        padding: 0.4rem 0.7rem; border-radius: 10px;
+        padding: 0.45rem 0.75rem; border-radius: 10px;
         border: 1px solid var(--border-2);
         background: var(--surface); color: var(--ink-2);
         font-family: inherit; font-size: 0.72rem; font-weight: 600;
@@ -333,7 +333,6 @@
     .video-thumb {
         position: relative; background: #000;
         aspect-ratio: 9/16; overflow: hidden;
-        display: flex; align-items: center; justify-content: center;
     }
     .video-thumb video {
         width: 100%; height: 100%; object-fit: cover;
@@ -343,36 +342,17 @@
         width: 100%; height: 100%; object-fit: cover;
         display: block; cursor: zoom-in;
     }
-    /* Loader pendant le chargement de la vidéo proxifiée */
-    .video-loader {
-        position: absolute; inset: 0;
-        display: flex; align-items: center; justify-content: center;
-        flex-direction: column; gap: 0.5rem;
-        background: #000;
-        color: var(--ink-3);
-        font-size: 0.7rem;
-        z-index: 1;
-        transition: opacity 0.3s;
-    }
-    .video-loader.hidden { opacity: 0; pointer-events: none; }
-    .video-loader-spinner {
-        width: 24px; height: 24px; border-radius: 50%;
-        border: 2px solid rgba(255,255,255,0.1);
-        border-top-color: var(--ink);
-        animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
     .video-badge {
         position: absolute; top: 8px; left: 8px;
         padding: 0.2rem 0.5rem; border-radius: 6px;
         background: rgba(0,0,0,0.7);
         backdrop-filter: blur(8px);
         font-size: 0.65rem; font-weight: 600;
-        color: #fff; z-index: 3;
+        color: #fff;
     }
     .video-actions {
         position: absolute; top: 8px; right: 8px;
-        display: flex; gap: 4px; z-index: 3;
+        display: flex; gap: 4px;
     }
     .video-action {
         width: 28px; height: 28px; border-radius: 8px;
@@ -385,33 +365,6 @@
     .video-action:hover { background: rgba(255,255,255,0.15); }
     .video-action.danger:hover { background: rgba(239,68,68,0.8); }
     .video-action.use-prompt:hover { background: rgba(34,197,94,0.8); }
-    .video-error {
-        position: absolute; inset: 0;
-        background: rgba(0,0,0,0.85);
-        display: none;
-        align-items: center; justify-content: center;
-        flex-direction: column;
-        color: var(--ink-3);
-        font-size: 0.7rem;
-        text-align: center;
-        padding: 1rem;
-        z-index: 2;
-    }
-    .video-error.visible { display: flex; }
-    .video-error-icon { font-size: 1.8rem; margin-bottom: 0.4rem; opacity: 0.5; }
-    .video-play-hint {
-        position: absolute; bottom: 8px; left: 50%;
-        transform: translateX(-50%);
-        padding: 0.2rem 0.5rem; border-radius: 6px;
-        background: rgba(0,0,0,0.7);
-        backdrop-filter: blur(8px);
-        font-size: 0.6rem; font-weight: 500;
-        color: #fff; opacity: 0;
-        transition: opacity 0.2s;
-        pointer-events: none; z-index: 2;
-        white-space: nowrap;
-    }
-    .video-thumb:hover .video-play-hint { opacity: 1; }
     .video-meta { padding: 0.7rem 0.8rem; }
     .video-title {
         font-size: 0.75rem; font-weight: 600;
@@ -456,6 +409,7 @@
         animation: spin 0.7s linear infinite;
         flex-shrink: 0;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .status-text {
         font-size: 0.78rem; color: var(--ink-2);
         font-weight: 500; white-space: nowrap;
@@ -558,11 +512,6 @@
         max-width: 100%; max-height: 100%;
         object-fit: contain; border-radius: 8px;
     }
-    .lightbox video {
-        max-width: 100%; max-height: 100%;
-        object-fit: contain; border-radius: 8px;
-        background: #000;
-    }
     .lightbox-close {
         position: absolute; top: 1rem; right: 1rem;
         width: 40px; height: 40px; border-radius: 50%;
@@ -571,16 +520,8 @@
         color: #fff; font-size: 20px; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         backdrop-filter: blur(8px);
-        z-index: 2;
     }
     .lightbox-close:hover { background: rgba(255,255,255,0.2); }
-    .lightbox-loader {
-        position: absolute;
-        display: flex; flex-direction: column;
-        align-items: center; gap: 0.6rem;
-        color: var(--ink-3); font-size: 0.8rem;
-    }
-    .lightbox-loader.hidden { display: none; }
     .image-picker-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -623,6 +564,7 @@
         color: var(--ink-3);
         font-size: 0.78rem;
     }
+    /* ═══ Modal de sélection du modèle ═══ */
     .model-option {
         display: flex; align-items: flex-start; gap: 0.8rem;
         padding: 1rem; border-radius: 12px;
@@ -826,6 +768,7 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Modal Clé API -->
 <div class="modal-backdrop" id="api-modal">
     <div class="modal">
         <div class="modal-title">🔑 Clé API Agnes</div>
@@ -842,11 +785,12 @@
     </div>
 </div>
 
+<!-- Modal sélection du modèle -->
 <div class="modal-backdrop" id="model-modal">
     <div class="modal">
         <div class="modal-title">🎬 Modèle vidéo</div>
         <div class="modal-desc">
-            Choisissez le modèle utilisé pour la génération de vidéos. Le modèle est sauvegardé automatiquement.
+            Choisissez le modèle utilisé pour la génération de vidéos. Le choix est sauvegardé automatiquement.
         </div>
 
         <div class="model-option" data-model="v2.0">
@@ -859,7 +803,7 @@
                 <div class="model-option-desc">
                     <strong>Modèle éprouvé</strong> — fonctionne sans limite de file d'attente.
                     Utilise <code>num_frames</code> et <code>frame_rate</code>.<br>
-                    Idéal pour les générations rapides et fiables.
+                    L'aperçu des vidéos s'affiche directement dans la galerie.
                 </div>
             </div>
         </div>
@@ -885,6 +829,7 @@
     </div>
 </div>
 
+<!-- Modal prolonger -->
 <div class="modal-backdrop" id="extend-modal">
     <div class="modal">
         <div class="modal-title">🔗 Prolonger la vidéo</div>
@@ -908,6 +853,7 @@
     </div>
 </div>
 
+<!-- Modal image picker -->
 <div class="modal-backdrop" id="image-picker-modal">
     <div class="modal">
         <div class="modal-title">🖼️ Choisir une image</div>
@@ -924,12 +870,7 @@
 
 <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightbox-close">✕</button>
-    <div class="lightbox-loader" id="lightbox-loader">
-        <div class="video-loader-spinner"></div>
-        <div>Chargement de la vidéo…</div>
-    </div>
-    <img id="lightbox-img" src="" alt="" style="display:none;">
-    <video id="lightbox-video" controls playsinline style="display:none;"></video>
+    <img id="lightbox-img" src="" alt="">
 </div>
 
 <script>
@@ -946,44 +887,26 @@ const STORAGE_KEY = 'flow_studio_api';
 const GALLERY_KEY = 'flow_studio_gallery';
 const MODEL_KEY = 'flow_studio_model';
 
+// Modèles disponibles
 const MODELS = {
     'v2.0': {
         id: 'v2.0',
         label: 'v2.0',
         apiName: 'agnes-video-v2.0',
-        api: 'legacy'
+        api: 'legacy'   // utilise num_frames + frame_rate
     },
     '2.5-flash': {
         id: '2.5-flash',
         label: '2.5 Flash',
         apiName: 'agnes-video-2.5-flash',
-        api: 'modern'
+        api: 'modern'   // utilise seconds + size + mode
     }
 };
 
+// ImgBB (uniquement utilisé pour 2.5 Flash)
 const IMGBB_KEY = 'b1838df7ac4b8d4fdb1eaf54b20d728c';
 const IMG_MIN_SIDE = 256;
 const IMG_MAX_SIDE = 5760;
-
-// ══════════════════════════════════════════════════════════════════
-// PROXY CORS — contourne le blocage du serveur Agnes
-// ══════════════════════════════════════════════════════════════════
-// Liste de proxys en cascade. Le premier qui répond est utilisé.
-const CORS_PROXIES = [
-    // corsproxy.io — fiable, gratuit, gère les vidéos
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-    // allorigins — fallback
-    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    // thingproxy — fallback final
-    u => `https://thingproxy.freeboard.io/fetch/${u}`
-];
-
-// Renvoie l'URL proxifiée (préfère corsproxy.io en premier)
-function proxiedVideoUrl(url) {
-    if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
-    // Pour les vidéos, on prend le premier proxy (le plus fiable)
-    return CORS_PROXIES[0](url);
-}
 
 // ══════════════════════════════════════════════════════════════════
 // STATE
@@ -1000,7 +923,7 @@ const state = {
     videos: [],
     extendTarget: null,
     pickerSelectedIndex: null,
-    model: 'v2.0'
+    model: 'v2.0'   // V2.0 par défaut
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -1125,8 +1048,13 @@ async function urlToDataUri(url) {
         log('Fetch direct échoué: ' + e.message);
     }
 
-    // Essaie chaque proxy en cascade
-    for (const makeProxy of CORS_PROXIES) {
+    const proxies = [
+        u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+        u => `https://images.weserv.nl/?url=${encodeURIComponent(u.replace(/^https?:\/\//, ''))}`,
+        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+    ];
+
+    for (const makeProxy of proxies) {
         try {
             const res = await fetch(makeProxy(url));
             if (!res.ok) continue;
@@ -1137,15 +1065,6 @@ async function urlToDataUri(url) {
             log('Proxy échoué: ' + e.message);
         }
     }
-
-    // Fallback images.weserv.nl pour les images
-    try {
-        const res = await fetch(`https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}`);
-        if (res.ok) {
-            const blob = await res.blob();
-            if (blob.size > 0) return await blobToDataUri(blob);
-        }
-    } catch (e) {}
 
     throw new Error('Impossible de récupérer l\'image (CORS).');
 }
@@ -1445,59 +1364,16 @@ $('api-modal').addEventListener('click', e => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// LIGHTBOX — supporte images ET vidéos (avec proxy CORS)
+// LIGHTBOX
 // ══════════════════════════════════════════════════════════════════
-function openLightbox(url, isVideo = false) {
-    const img = $('lightbox-img');
-    const vid = $('lightbox-video');
-    const loader = $('lightbox-loader');
-
-    if (isVideo) {
-        img.style.display = 'none';
-        vid.style.display = 'block';
-        loader.classList.remove('hidden');
-
-        // ✅ PROXY CORS pour la lecture de la vidéo
-        vid.src = proxiedVideoUrl(url);
-
-        vid.addEventListener('loadeddata', () => {
-            loader.classList.add('hidden');
-        }, { once: true });
-        vid.addEventListener('error', () => {
-            loader.classList.add('hidden');
-            toast('Impossible de charger la vidéo (CORS)', 'error', 5000);
-        }, { once: true });
-    } else {
-        vid.style.display = 'none';
-        vid.pause();
-        vid.src = '';
-        loader.classList.add('hidden');
-        img.style.display = 'block';
-        img.src = url;
-    }
+function openLightbox(url) {
+    $('lightbox-img').src = url;
     $('lightbox').classList.add('visible');
 }
-
-function closeLightbox() {
-    $('lightbox').classList.remove('visible');
-    const vid = $('lightbox-video');
-    vid.pause();
-    vid.src = '';
-    $('lightbox-img').src = '';
-    $('lightbox-loader').classList.add('hidden');
-}
-
-$('lightbox-close').addEventListener('click', closeLightbox);
+$('lightbox-close').addEventListener('click', () => $('lightbox').classList.remove('visible'));
 $('lightbox').addEventListener('click', e => {
-    if (e.target === $('lightbox')) closeLightbox();
+    if (e.target === $('lightbox')) $('lightbox').classList.remove('visible');
 });
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && $('lightbox').classList.contains('visible')) {
-        closeLightbox();
-    }
-});
-
-window.openLightbox = openLightbox;
 
 // ══════════════════════════════════════════════════════════════════
 // PROMPT BUILDERS
@@ -1610,7 +1486,7 @@ async function apiFetch(url, opts = {}) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CREATE VIDEO TASK
+// CREATE VIDEO TASK — dispatcher selon le modèle sélectionné
 // ══════════════════════════════════════════════════════════════════
 async function createVideoTask(prompt, imageDataUri = null) {
     const m = MODELS[state.model];
@@ -1623,6 +1499,9 @@ async function createVideoTask(prompt, imageDataUri = null) {
     }
 }
 
+// ──────────────────────────────────────────────────────────────────
+// V2.0 — num_frames + frame_rate (ton modèle qui fonctionne)
+// ──────────────────────────────────────────────────────────────────
 async function createVideoTaskV2(prompt, imageDataUri = null) {
     const body = {
         model: MODELS['v2.0'].apiName,
@@ -1677,6 +1556,9 @@ async function createVideoTaskV2(prompt, imageDataUri = null) {
     return id;
 }
 
+// ──────────────────────────────────────────────────────────────────
+// 2.5 Flash — seconds + size + mode (text / keyframe)
+// ──────────────────────────────────────────────────────────────────
 async function createVideoTaskFlash(prompt, imageDataUri = null) {
     let firstFrameUrl = null;
 
@@ -1737,6 +1619,9 @@ async function createVideoTaskFlash(prompt, imageDataUri = null) {
     return id;
 }
 
+// ══════════════════════════════════════════════════════════════════
+// UPLOAD IMGBB (uniquement pour Flash)
+// ══════════════════════════════════════════════════════════════════
 async function uploadImageForFlash(dataUri) {
     const normalized = await normalizeImageForApi(dataUri);
     const pureBase64 = normalized.includes(',') ? normalized.split(',')[1] : normalized;
@@ -1767,6 +1652,9 @@ async function uploadImageForFlash(dataUri) {
     return url;
 }
 
+// ══════════════════════════════════════════════════════════════════
+// CREATE IMAGE TASK (toujours via agnes-image-2.1-flash)
+// ══════════════════════════════════════════════════════════════════
 async function createImageTask(prompt) {
     const sizeMap = {
         portrait: '1024x1792',
@@ -1804,7 +1692,7 @@ async function createImageTask(prompt) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// POLL VIDEO
+// POLL VIDEO — avec ou sans model_name selon le modèle
 // ══════════════════════════════════════════════════════════════════
 async function pollVideo(videoId, onProgress) {
     const m = MODELS[state.model];
@@ -1854,20 +1742,18 @@ async function pollVideo(videoId, onProgress) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// EXTRACT LAST FRAME (avec proxy CORS)
+// EXTRACT LAST FRAME
 // ══════════════════════════════════════════════════════════════════
 async function extractLastFrame(videoUrl) {
-    log('Téléchargement de la vidéo source…');
+    log('Téléchargement de la vidéo…');
     let blob;
     try {
-        // Essai direct
         const res = await fetch(videoUrl, { mode: 'cors' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         blob = await res.blob();
     } catch (e) {
-        log('Fetch direct échoué, tentative via proxy CORS…');
-        // ✅ Utilise le proxy CORS
-        const proxyUrl = proxiedVideoUrl(videoUrl);
+        log('Fetch direct vidéo échoué, tentative via proxy…');
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(videoUrl)}`;
         const res = await fetch(proxyUrl);
         if (!res.ok) throw new Error('Impossible de télécharger la vidéo (HTTP ' + res.status + ')');
         blob = await res.blob();
@@ -1887,6 +1773,7 @@ async function extractLastFrame(videoUrl) {
         };
 
         video.addEventListener('loadedmetadata', () => {
+            log('Vidéo chargée, durée: ' + video.duration.toFixed(2) + 's');
             video.currentTime = Math.max(0, video.duration - 0.05);
         });
 
@@ -1916,7 +1803,7 @@ async function extractLastFrame(videoUrl) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// GALLERY RENDER — avec proxy CORS pour les vidéos
+// GALLERY RENDER
 // ══════════════════════════════════════════════════════════════════
 function renderGallery() {
     const grid = $('gallery-grid');
@@ -1941,50 +1828,16 @@ function renderGallery() {
             : v.format === 'cinema' ? '21/9'
             : '1/1';
 
-        const badge = v.isImage ? '🖼️ Image' : `🎥 ${v.duration.toFixed(1)}s`;
+        const mediaHtml = v.isImage
+            ? `<img src="${v.url}" alt="${escapeHtml(v.title)}" data-action="zoom" data-index="${i}">`
+            : `<video src="${v.url}" muted playsinline preload="metadata"
+                 onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"></video>`;
+
+        const badge = v.isImage ? '🖼️ Image' : `${v.duration.toFixed(1)}s`;
 
         const useInPromptBtn = v.isImage
             ? `<button class="video-action use-prompt" data-action="useInPrompt" data-index="${i}" title="Utiliser dans le prompt">✏️</button>`
             : '';
-
-        let mediaHtml;
-        if (v.isImage) {
-            mediaHtml = `<img src="${v.url}" alt="${escapeHtml(v.title)}" data-action="zoom" data-index="${i}" loading="lazy">`;
-        } else {
-            // ✅ Vidéo via proxy CORS
-            const proxUrl = proxiedVideoUrl(v.url);
-            mediaHtml = `
-                <div class="video-loader" data-loader-index="${i}">
-                    <div class="video-loader-spinner"></div>
-                    <div>Chargement…</div>
-                </div>
-                <video
-                    src="${proxUrl}"
-                    crossorigin="anonymous"
-                    muted
-                    playsinline
-                    preload="metadata"
-                    loop
-                    data-index="${i}"
-                    data-original-url="${v.url}"
-                    onloadeddata="this.parentElement.querySelector('.video-loader').classList.add('hidden')"
-                    onmouseover="this.play().catch(()=>{})"
-                    onmouseout="this.pause();this.currentTime=0;"
-                    onclick="event.stopPropagation();window.openLightbox(this.dataset.originalUrl, true);"
-                    onerror="this.parentElement.querySelector('.video-loader').classList.add('hidden'); this.parentElement.querySelector('.video-error').classList.add('visible')"
-                ></video>
-                <div class="video-error">
-                    <div class="video-error-icon">⚠️</div>
-                    <div>Vidéo non disponible</div>
-                    <div style="margin-top:0.4rem;font-size:0.6rem;">
-                        <a href="${v.url}" target="_blank" style="color:var(--info);">Ouvrir dans un onglet</a>
-                    </div>
-                </div>
-            `;
-        }
-
-        const playHint = v.isImage ? '' :
-            `<div class="video-play-hint">Cliquer pour agrandir</div>`;
 
         return `
             <div class="video-card" data-index="${i}">
@@ -1997,7 +1850,6 @@ function renderGallery() {
                         <button class="video-action" data-action="download" data-index="${i}" title="Télécharger">⬇</button>
                         <button class="video-action danger" data-action="delete" data-index="${i}" title="Supprimer">✕</button>
                     </div>
-                    ${playHint}
                 </div>
                 <div class="video-meta">
                     <div class="video-title">${escapeHtml(v.title)}</div>
@@ -2021,10 +1873,7 @@ function renderGallery() {
             if (action === 'delete') deleteVideo(idx);
             else if (action === 'download') downloadVideo(idx);
             else if (action === 'extend') openExtend(idx);
-            else if (action === 'zoom') {
-                const v = state.videos[idx];
-                openLightbox(v.url, !v.isImage);
-            }
+            else if (action === 'zoom') openLightbox(state.videos[idx].url);
             else if (action === 'useInPrompt') useImageInPrompt(idx);
         });
     });
@@ -2113,8 +1962,7 @@ function openExtend(index) {
     const v = state.videos[index];
     if (!v || v.isImage) return;
     state.extendTarget = { index, video: v };
-    // ✅ Proxifie aussi pour la preview
-    $('extend-video').src = proxiedVideoUrl(v.url);
+    $('extend-video').src = v.url;
     $('extend-title').textContent = v.title;
     $('extend-duration').textContent = state.duration.toFixed(1);
     $('extend-prompt').value = '';
@@ -2238,7 +2086,7 @@ $('generate-btn').addEventListener('click', async () => {
         }
     });
 
-    log('Flow Studio prêt — Modèle : ' + MODELS[state.model].apiName + ' + Proxy CORS');
+    log('Flow Studio prêt — Modèle actuel : ' + MODELS[state.model].apiName);
 })();
 </script>
 
