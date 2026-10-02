@@ -15,7 +15,7 @@
         --border: #2a2a2a; --border-2: #383838; --border-3: #4a4a4a;
         --ink: #ffffff; --ink-2: #b8b8b8; --ink-3: #7a7a7a; --ink-4: #4a4a4a;
         --accent: #ffffff; --accent-dim: #d4d4d4;
-        --success: #22c55e; --error: #ef4444; --warn: #f59e0b;
+        --success: #22c55e; --error: #ef4444; --warn: #f59e0b; --info: #3b82f6;
         --radius: 14px; --radius-sm: 10px; --radius-lg: 20px;
     }
     html, body { height: 100%; overflow-x: hidden; }
@@ -64,6 +64,31 @@
         font-size: 15px; transition: all 0.2s;
     }
     .btn-icon:hover { background: var(--surface-2); border-color: var(--border-2); }
+    .model-toggle {
+        display: flex; align-items: center; gap: 0.5rem;
+        padding: 0.4rem 0.7rem; border-radius: 10px;
+        border: 1px solid var(--border-2);
+        background: var(--surface); color: var(--ink-2);
+        font-family: inherit; font-size: 0.72rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .model-toggle:hover {
+        background: var(--surface-2);
+        border-color: var(--border-3);
+        color: var(--ink);
+    }
+    .model-toggle .dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--success);
+        flex-shrink: 0;
+    }
+    .model-toggle .dot.flash { background: var(--info); }
+    .model-toggle .label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.02em;
+    }
     .hero { padding: 2.5rem 0 1.5rem; text-align: center; }
     .hero-title {
         font-size: clamp(1.6rem, 5vw, 2.4rem);
@@ -308,6 +333,7 @@
     .video-thumb {
         position: relative; background: #000;
         aspect-ratio: 9/16; overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
     }
     .video-thumb video {
         width: 100%; height: 100%; object-fit: cover;
@@ -317,17 +343,36 @@
         width: 100%; height: 100%; object-fit: cover;
         display: block; cursor: zoom-in;
     }
+    /* Loader pendant le chargement de la vidéo proxifiée */
+    .video-loader {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; gap: 0.5rem;
+        background: #000;
+        color: var(--ink-3);
+        font-size: 0.7rem;
+        z-index: 1;
+        transition: opacity 0.3s;
+    }
+    .video-loader.hidden { opacity: 0; pointer-events: none; }
+    .video-loader-spinner {
+        width: 24px; height: 24px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.1);
+        border-top-color: var(--ink);
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .video-badge {
         position: absolute; top: 8px; left: 8px;
         padding: 0.2rem 0.5rem; border-radius: 6px;
         background: rgba(0,0,0,0.7);
         backdrop-filter: blur(8px);
         font-size: 0.65rem; font-weight: 600;
-        color: #fff;
+        color: #fff; z-index: 3;
     }
     .video-actions {
         position: absolute; top: 8px; right: 8px;
-        display: flex; gap: 4px;
+        display: flex; gap: 4px; z-index: 3;
     }
     .video-action {
         width: 28px; height: 28px; border-radius: 8px;
@@ -340,6 +385,33 @@
     .video-action:hover { background: rgba(255,255,255,0.15); }
     .video-action.danger:hover { background: rgba(239,68,68,0.8); }
     .video-action.use-prompt:hover { background: rgba(34,197,94,0.8); }
+    .video-error {
+        position: absolute; inset: 0;
+        background: rgba(0,0,0,0.85);
+        display: none;
+        align-items: center; justify-content: center;
+        flex-direction: column;
+        color: var(--ink-3);
+        font-size: 0.7rem;
+        text-align: center;
+        padding: 1rem;
+        z-index: 2;
+    }
+    .video-error.visible { display: flex; }
+    .video-error-icon { font-size: 1.8rem; margin-bottom: 0.4rem; opacity: 0.5; }
+    .video-play-hint {
+        position: absolute; bottom: 8px; left: 50%;
+        transform: translateX(-50%);
+        padding: 0.2rem 0.5rem; border-radius: 6px;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        font-size: 0.6rem; font-weight: 500;
+        color: #fff; opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none; z-index: 2;
+        white-space: nowrap;
+    }
+    .video-thumb:hover .video-play-hint { opacity: 1; }
     .video-meta { padding: 0.7rem 0.8rem; }
     .video-title {
         font-size: 0.75rem; font-weight: 600;
@@ -384,7 +456,6 @@
         animation: spin 0.7s linear infinite;
         flex-shrink: 0;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
     .status-text {
         font-size: 0.78rem; color: var(--ink-2);
         font-weight: 500; white-space: nowrap;
@@ -407,6 +478,7 @@
     .toast.success { border-color: var(--success); }
     .toast.error { border-color: var(--error); }
     .toast.warn { border-color: var(--warn); }
+    .toast.info { border-color: var(--info); }
     .modal-backdrop {
         position: fixed; inset: 0; z-index: 200;
         background: rgba(0,0,0,0.85);
@@ -419,7 +491,7 @@
     .modal {
         background: var(--surface); border: 1px solid var(--border-2);
         border-radius: var(--radius-lg); padding: 1.5rem;
-        max-width: 420px; width: 100%;
+        max-width: 480px; width: 100%;
         transform: scale(0.95); transition: transform 0.25s;
         max-height: 90vh; overflow-y: auto;
     }
@@ -486,6 +558,11 @@
         max-width: 100%; max-height: 100%;
         object-fit: contain; border-radius: 8px;
     }
+    .lightbox video {
+        max-width: 100%; max-height: 100%;
+        object-fit: contain; border-radius: 8px;
+        background: #000;
+    }
     .lightbox-close {
         position: absolute; top: 1rem; right: 1rem;
         width: 40px; height: 40px; border-radius: 50%;
@@ -494,9 +571,16 @@
         color: #fff; font-size: 20px; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         backdrop-filter: blur(8px);
+        z-index: 2;
     }
     .lightbox-close:hover { background: rgba(255,255,255,0.2); }
-    /* Image picker modal */
+    .lightbox-loader {
+        position: absolute;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 0.6rem;
+        color: var(--ink-3); font-size: 0.8rem;
+    }
+    .lightbox-loader.hidden { display: none; }
     .image-picker-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -539,6 +623,62 @@
         color: var(--ink-3);
         font-size: 0.78rem;
     }
+    .model-option {
+        display: flex; align-items: flex-start; gap: 0.8rem;
+        padding: 1rem; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--bg);
+        cursor: pointer; transition: all 0.2s;
+        margin-bottom: 0.6rem;
+    }
+    .model-option:hover { border-color: var(--border-3); background: var(--surface-2); }
+    .model-option.active {
+        border-color: var(--ink); background: var(--surface-2);
+        box-shadow: 0 0 0 1px var(--ink);
+    }
+    .model-option-radio {
+        width: 18px; height: 18px; border-radius: 50%;
+        border: 2px solid var(--border-3);
+        flex-shrink: 0; margin-top: 2px;
+        position: relative;
+        transition: all 0.2s;
+    }
+    .model-option.active .model-option-radio {
+        border-color: var(--ink);
+    }
+    .model-option.active .model-option-radio::after {
+        content: ''; position: absolute; inset: 3px;
+        border-radius: 50%; background: var(--ink);
+    }
+    .model-option-body { flex: 1; }
+    .model-option-title {
+        font-size: 0.88rem; font-weight: 700;
+        margin-bottom: 0.25rem;
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .model-option-badge {
+        font-size: 0.6rem; font-weight: 700;
+        padding: 0.15rem 0.4rem; border-radius: 5px;
+        text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .model-option-badge.recommended {
+        background: rgba(34,197,94,0.15); color: var(--success);
+    }
+    .model-option-badge.new {
+        background: rgba(59,130,246,0.15); color: #60a5fa;
+    }
+    .model-option-desc {
+        font-size: 0.72rem; color: var(--ink-3);
+        line-height: 1.5;
+    }
+    .model-option-desc strong { color: var(--ink-2); font-weight: 600; }
+    .model-option-desc code {
+        background: var(--surface-2);
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        color: var(--ink-2);
+    }
     @media (max-width: 640px) {
         .hero { padding: 1.5rem 0 1rem; }
         .composer { padding: 1rem; }
@@ -558,6 +698,10 @@
             <span class="brand-name">Flow Studio</span>
         </div>
         <div class="topbar-actions">
+            <button class="model-toggle" id="model-toggle-btn" title="Changer de modèle vidéo">
+                <span class="dot" id="model-dot"></span>
+                <span class="label" id="model-label">v2.0</span>
+            </button>
             <button class="btn-icon" id="api-btn" title="Clé API">🔑</button>
         </div>
     </div>
@@ -698,6 +842,49 @@
     </div>
 </div>
 
+<div class="modal-backdrop" id="model-modal">
+    <div class="modal">
+        <div class="modal-title">🎬 Modèle vidéo</div>
+        <div class="modal-desc">
+            Choisissez le modèle utilisé pour la génération de vidéos. Le modèle est sauvegardé automatiquement.
+        </div>
+
+        <div class="model-option" data-model="v2.0">
+            <div class="model-option-radio"></div>
+            <div class="model-option-body">
+                <div class="model-option-title">
+                    Agnes Video V2.0
+                    <span class="model-option-badge recommended">Recommandé</span>
+                </div>
+                <div class="model-option-desc">
+                    <strong>Modèle éprouvé</strong> — fonctionne sans limite de file d'attente.
+                    Utilise <code>num_frames</code> et <code>frame_rate</code>.<br>
+                    Idéal pour les générations rapides et fiables.
+                </div>
+            </div>
+        </div>
+
+        <div class="model-option" data-model="2.5-flash">
+            <div class="model-option-radio"></div>
+            <div class="model-option-body">
+                <div class="model-option-title">
+                    Agnes Video 2.5 Flash
+                    <span class="model-option-badge new">Nouveau</span>
+                </div>
+                <div class="model-option-desc">
+                    <strong>Modèle 2026</strong> — supporte les modes <code>text</code> et <code>keyframe</code>,
+                    mais peut être limité par la file d'attente serveur.<br>
+                    Utilise <code>seconds</code> et <code>size: 720P</code>.
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="modal-btn primary" id="model-modal-close">Fermer</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-backdrop" id="extend-modal">
     <div class="modal">
         <div class="modal-title">🔗 Prolonger la vidéo</div>
@@ -721,7 +908,6 @@
     </div>
 </div>
 
-<!-- Image Picker Modal -->
 <div class="modal-backdrop" id="image-picker-modal">
     <div class="modal">
         <div class="modal-title">🖼️ Choisir une image</div>
@@ -738,7 +924,12 @@
 
 <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightbox-close">✕</button>
-    <img id="lightbox-img" src="" alt="">
+    <div class="lightbox-loader" id="lightbox-loader">
+        <div class="video-loader-spinner"></div>
+        <div>Chargement de la vidéo…</div>
+    </div>
+    <img id="lightbox-img" src="" alt="" style="display:none;">
+    <video id="lightbox-video" controls playsinline style="display:none;"></video>
 </div>
 
 <script>
@@ -747,13 +938,52 @@
 // ══════════════════════════════════════════════════════════════════
 const API_BASE = 'https://apihub.agnes-ai.com/v1';
 const POLL_BASE = 'https://apihub.agnes-ai.com/agnesapi';
-const VIDEO_MODEL = 'agnes-video-v2.0';
 const IMAGE_MODEL = 'agnes-image-2.1-flash';
 const FRAME_RATE = 24;
 const POLL_INTERVAL = 8;
 const MAX_POLLS = 120;
 const STORAGE_KEY = 'flow_studio_api';
 const GALLERY_KEY = 'flow_studio_gallery';
+const MODEL_KEY = 'flow_studio_model';
+
+const MODELS = {
+    'v2.0': {
+        id: 'v2.0',
+        label: 'v2.0',
+        apiName: 'agnes-video-v2.0',
+        api: 'legacy'
+    },
+    '2.5-flash': {
+        id: '2.5-flash',
+        label: '2.5 Flash',
+        apiName: 'agnes-video-2.5-flash',
+        api: 'modern'
+    }
+};
+
+const IMGBB_KEY = 'b1838df7ac4b8d4fdb1eaf54b20d728c';
+const IMG_MIN_SIDE = 256;
+const IMG_MAX_SIDE = 5760;
+
+// ══════════════════════════════════════════════════════════════════
+// PROXY CORS — contourne le blocage du serveur Agnes
+// ══════════════════════════════════════════════════════════════════
+// Liste de proxys en cascade. Le premier qui répond est utilisé.
+const CORS_PROXIES = [
+    // corsproxy.io — fiable, gratuit, gère les vidéos
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    // allorigins — fallback
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    // thingproxy — fallback final
+    u => `https://thingproxy.freeboard.io/fetch/${u}`
+];
+
+// Renvoie l'URL proxifiée (préfère corsproxy.io en premier)
+function proxiedVideoUrl(url) {
+    if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    // Pour les vidéos, on prend le premier proxy (le plus fiable)
+    return CORS_PROXIES[0](url);
+}
 
 // ══════════════════════════════════════════════════════════════════
 // STATE
@@ -769,7 +999,8 @@ const state = {
     stopRequested: false,
     videos: [],
     extendTarget: null,
-    pickerSelectedIndex: null
+    pickerSelectedIndex: null,
+    model: 'v2.0'
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -823,6 +1054,52 @@ function escapeHtml(s) {
 }
 
 // ══════════════════════════════════════════════════════════════════
+// SÉLECTION DU MODÈLE
+// ══════════════════════════════════════════════════════════════════
+function loadModel() {
+    try {
+        const saved = localStorage.getItem(MODEL_KEY);
+        if (saved && MODELS[saved]) state.model = saved;
+    } catch (e) {}
+}
+
+function saveModel() {
+    try { localStorage.setItem(MODEL_KEY, state.model); } catch (e) {}
+}
+
+function updateModelUI() {
+    const m = MODELS[state.model];
+    $('model-label').textContent = m.label;
+    $('model-dot').className = 'dot' + (m.api === 'modern' ? ' flash' : '');
+
+    document.querySelectorAll('.model-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.model === state.model);
+    });
+}
+
+$('model-toggle-btn').addEventListener('click', () => {
+    updateModelUI();
+    $('model-modal').classList.add('visible');
+});
+
+$('model-modal-close').addEventListener('click', () => {
+    $('model-modal').classList.remove('visible');
+});
+
+$('model-modal').addEventListener('click', e => {
+    if (e.target === $('model-modal')) $('model-modal').classList.remove('visible');
+});
+
+document.querySelectorAll('.model-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+        state.model = opt.dataset.model;
+        saveModel();
+        updateModelUI();
+        toast('Modèle : ' + MODELS[state.model].apiName, 'info', 1800);
+    });
+});
+
+// ══════════════════════════════════════════════════════════════════
 // CORS-FRIENDLY IMAGE FETCH
 // ══════════════════════════════════════════════════════════════════
 function blobToDataUri(blob) {
@@ -838,7 +1115,6 @@ async function urlToDataUri(url) {
     if (!url) throw new Error('URL vide');
     if (url.startsWith('data:')) return url;
 
-    // 1) Tentative directe
     try {
         const res = await fetch(url, { mode: 'cors' });
         if (res.ok) {
@@ -849,19 +1125,10 @@ async function urlToDataUri(url) {
         log('Fetch direct échoué: ' + e.message);
     }
 
-    // 2) Proxies CORS publics en cascade
-    const proxies = [
-        u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-        u => `https://images.weserv.nl/?url=${encodeURIComponent(u.replace(/^https?:\/\//, ''))}`,
-        u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-        u => `https://thingproxy.freeboard.io/fetch/${u}`
-    ];
-
-    for (const makeProxy of proxies) {
+    // Essaie chaque proxy en cascade
+    for (const makeProxy of CORS_PROXIES) {
         try {
-            const proxyUrl = makeProxy(url);
-            log('Essai proxy: ' + proxyUrl.slice(0, 80));
-            const res = await fetch(proxyUrl);
+            const res = await fetch(makeProxy(url));
             if (!res.ok) continue;
             const blob = await res.blob();
             if (blob.size === 0) continue;
@@ -871,12 +1138,20 @@ async function urlToDataUri(url) {
         }
     }
 
-    throw new Error('Impossible de récupérer l\'image (CORS). Ouvrez l\'app via http://localhost.');
+    // Fallback images.weserv.nl pour les images
+    try {
+        const res = await fetch(`https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ''))}`);
+        if (res.ok) {
+            const blob = await res.blob();
+            if (blob.size > 0) return await blobToDataUri(blob);
+        }
+    } catch (e) {}
+
+    throw new Error('Impossible de récupérer l\'image (CORS).');
 }
 
 // ══════════════════════════════════════════════════════════════════
-// NORMALISATION DE L'IMAGE DE RÉFÉRENCE
-// Redimensionne l'image source aux dimensions exactes du format choisi
+// NORMALISATION IMAGE
 // ══════════════════════════════════════════════════════════════════
 function normalizeImageForFormat(dataUri, format) {
     const targetSize = {
@@ -896,20 +1171,48 @@ function normalizeImageForFormat(dataUri, format) {
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Cover : remplit sans déformer, recadre au centre
                 const scale = Math.max(targetSize.w / img.width, targetSize.h / img.height);
                 const w = img.width * scale;
                 const h = img.height * scale;
                 const x = (targetSize.w - w) / 2;
                 const y = (targetSize.h - h) / 2;
                 ctx.drawImage(img, x, y, w, h);
-
                 resolve(canvas.toDataURL('image/jpeg', 0.95));
             } catch (e) {
-                log('Normalisation échouée: ' + e.message);
                 resolve(dataUri);
             }
+        };
+        img.onerror = () => resolve(dataUri);
+        img.src = dataUri;
+    });
+}
+
+function normalizeImageForApi(dataUri) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w < IMG_MIN_SIDE || h < IMG_MIN_SIDE) {
+                const scale = Math.max(IMG_MIN_SIDE / w, IMG_MIN_SIDE / h);
+                w = Math.round(w * scale);
+                h = Math.round(h * scale);
+            }
+            if (w > IMG_MAX_SIDE || h > IMG_MAX_SIDE) {
+                const scale = Math.min(IMG_MAX_SIDE / w, IMG_MAX_SIDE / h);
+                w = Math.round(w * scale);
+                h = Math.round(h * scale);
+            }
+            w = Math.max(IMG_MIN_SIDE, Math.min(IMG_MAX_SIDE, w));
+            h = Math.max(IMG_MIN_SIDE, Math.min(IMG_MAX_SIDE, h));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.95));
         };
         img.onerror = () => resolve(dataUri);
         img.src = dataUri;
@@ -988,15 +1291,18 @@ document.querySelectorAll('.format-btn').forEach(btn => {
 // UI — DURATION SLIDER
 // ══════════════════════════════════════════════════════════════════
 const durationSlider = $('duration-slider');
+
 function updateSliderBg() {
     const pct = ((state.duration - 5) / 13) * 100;
     durationSlider.style.background = `linear-gradient(90deg, var(--ink) 0%, var(--ink) ${pct}%, var(--surface-3) ${pct}%, var(--surface-3) 100%)`;
 }
+
 durationSlider.addEventListener('input', e => {
     state.duration = parseFloat(e.target.value);
     $('duration-value').textContent = state.duration.toFixed(1) + 's';
     updateSliderBg();
 });
+
 updateSliderBg();
 
 // ══════════════════════════════════════════════════════════════════
@@ -1038,7 +1344,7 @@ function renderAttachments() {
 $('prompt-input').addEventListener('input', updateGenerateBtn);
 
 // ══════════════════════════════════════════════════════════════════
-// UI — IMAGE PICKER (depuis la galerie)
+// UI — IMAGE PICKER
 // ══════════════════════════════════════════════════════════════════
 $('gallery-pick-btn').addEventListener('click', () => {
     const images = state.videos.filter(v => v.isImage);
@@ -1139,16 +1445,59 @@ $('api-modal').addEventListener('click', e => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// LIGHTBOX
+// LIGHTBOX — supporte images ET vidéos (avec proxy CORS)
 // ══════════════════════════════════════════════════════════════════
-function openLightbox(url) {
-    $('lightbox-img').src = url;
+function openLightbox(url, isVideo = false) {
+    const img = $('lightbox-img');
+    const vid = $('lightbox-video');
+    const loader = $('lightbox-loader');
+
+    if (isVideo) {
+        img.style.display = 'none';
+        vid.style.display = 'block';
+        loader.classList.remove('hidden');
+
+        // ✅ PROXY CORS pour la lecture de la vidéo
+        vid.src = proxiedVideoUrl(url);
+
+        vid.addEventListener('loadeddata', () => {
+            loader.classList.add('hidden');
+        }, { once: true });
+        vid.addEventListener('error', () => {
+            loader.classList.add('hidden');
+            toast('Impossible de charger la vidéo (CORS)', 'error', 5000);
+        }, { once: true });
+    } else {
+        vid.style.display = 'none';
+        vid.pause();
+        vid.src = '';
+        loader.classList.add('hidden');
+        img.style.display = 'block';
+        img.src = url;
+    }
     $('lightbox').classList.add('visible');
 }
-$('lightbox-close').addEventListener('click', () => $('lightbox').classList.remove('visible'));
+
+function closeLightbox() {
+    $('lightbox').classList.remove('visible');
+    const vid = $('lightbox-video');
+    vid.pause();
+    vid.src = '';
+    $('lightbox-img').src = '';
+    $('lightbox-loader').classList.add('hidden');
+}
+
+$('lightbox-close').addEventListener('click', closeLightbox);
 $('lightbox').addEventListener('click', e => {
-    if (e.target === $('lightbox')) $('lightbox').classList.remove('visible');
+    if (e.target === $('lightbox')) closeLightbox();
 });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('lightbox').classList.contains('visible')) {
+        closeLightbox();
+    }
+});
+
+window.openLightbox = openLightbox;
 
 // ══════════════════════════════════════════════════════════════════
 // PROMPT BUILDERS
@@ -1176,7 +1525,6 @@ function buildVideoPrompt(userPrompt) {
     const isI2V = state.mode === 'image-to-video' && state.image;
 
     if (isI2V) {
-        // ═══ MODE IMAGE → VIDÉO : préservation stricte de la référence ═══
         const parts = [
             'STRICT IMAGE-TO-VIDEO ANIMATION.',
             'The provided reference image MUST be preserved EXACTLY as the first frame and throughout the entire video.',
@@ -1210,7 +1558,6 @@ function buildVideoPrompt(userPrompt) {
         return parts.join(' ');
     }
 
-    // ═══ MODE TEXTE → VIDÉO : comportement normal ═══
     const parts = [];
     parts.push(STYLE_PROMPTS[state.style]);
     parts.push(QUALITY_PROMPTS[state.quality]);
@@ -1234,7 +1581,7 @@ function buildImagePrompt(userPrompt) {
 // ══════════════════════════════════════════════════════════════════
 // API FETCH
 // ══════════════════════════════════════════════════════════════════
-async function apiFetch(url, opts = {}, label = 'API') {
+async function apiFetch(url, opts = {}) {
     for (let a = 0; a < 7; a++) {
         if (state.stopRequested) throw new Error('Arrêt demandé');
         try {
@@ -1246,7 +1593,7 @@ async function apiFetch(url, opts = {}, label = 'API') {
                 continue;
             }
             if (r.status === 503) {
-                const w = [5, 10, 15, 20, 30, 45][Math.min(a, 5)];
+                const w = [15, 30, 60, 90, 120, 180][Math.min(a, 5)];
                 setStatus(`Service occupé, attente ${w}s…`);
                 await sleep(w * 1000);
                 continue;
@@ -1262,25 +1609,36 @@ async function apiFetch(url, opts = {}, label = 'API') {
     return fetch(url, opts);
 }
 
+// ══════════════════════════════════════════════════════════════════
+// CREATE VIDEO TASK
+// ══════════════════════════════════════════════════════════════════
 async function createVideoTask(prompt, imageDataUri = null) {
+    const m = MODELS[state.model];
+    log('Modèle sélectionné : ' + m.apiName + ' (api: ' + m.api + ')');
+
+    if (m.api === 'legacy') {
+        return await createVideoTaskV2(prompt, imageDataUri);
+    } else {
+        return await createVideoTaskFlash(prompt, imageDataUri);
+    }
+}
+
+async function createVideoTaskV2(prompt, imageDataUri = null) {
     const body = {
-        model: VIDEO_MODEL,
+        model: MODELS['v2.0'].apiName,
         prompt: prompt,
         num_frames: framesFromSeconds(state.duration),
         frame_rate: FRAME_RATE
     };
 
     if (imageDataUri) {
-        // Normaliser l'image au format choisi pour garantir la fidélité
         const normalized = await normalizeImageForFormat(imageDataUri, state.format);
         const pureBase64 = normalized.includes(',')
             ? normalized.split(',')[1]
             : normalized;
-
         const mimeMatch = normalized.match(/^data:(image\/[a-z+]+);base64,/i);
         const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-        // ─── Paramètres de préservation maximale ───
         body.image = pureBase64;
         body.image_format = mime;
         body.image_weight = 1.0;
@@ -1293,6 +1651,13 @@ async function createVideoTask(prompt, imageDataUri = null) {
         body.seed = Math.floor(Math.random() * 1e9);
     }
 
+    log('Body V2.0 envoyé: ' + JSON.stringify({
+        model: body.model,
+        num_frames: body.num_frames,
+        frame_rate: body.frame_rate,
+        has_image: !!body.image
+    }));
+
     const r = await apiFetch(`${API_BASE}/videos`, {
         method: 'POST',
         headers: {
@@ -1304,12 +1669,102 @@ async function createVideoTask(prompt, imageDataUri = null) {
 
     if (!r.ok) {
         const err = await r.text();
-        throw new Error(`HTTP ${r.status} — ${err.slice(0, 180)}`);
+        throw new Error(`HTTP ${r.status} — ${err.slice(0, 200)}`);
     }
     const d = await r.json();
     const id = d.video_id || d.id || d.task_id;
     if (!id) throw new Error('Pas de video_id retourné');
     return id;
+}
+
+async function createVideoTaskFlash(prompt, imageDataUri = null) {
+    let firstFrameUrl = null;
+
+    if (imageDataUri) {
+        setStatus('Normalisation + upload de l\'image…');
+        try {
+            firstFrameUrl = await uploadImageForFlash(imageDataUri);
+        } catch (e) {
+            throw new Error('Upload image échoué : ' + e.message);
+        }
+        if (!firstFrameUrl || !firstFrameUrl.startsWith('http')) {
+            throw new Error('URL de l\'image de référence invalide');
+        }
+    }
+
+    const body = {
+        model: MODELS['2.5-flash'].apiName,
+        prompt: prompt,
+        seconds: String(Math.round(state.duration)),
+        size: '720P',
+        aspect_ratio: state.format === 'portrait' ? '9:16' :
+                      state.format === 'landscape' ? '16:9' :
+                      state.format === 'cinema' ? '21:9' : '1:1'
+    };
+
+    if (firstFrameUrl) {
+        body.mode = 'keyframe';
+        body.first_frame = firstFrameUrl;
+    } else {
+        body.mode = 'text';
+    }
+
+    log('Body Flash envoyé: ' + JSON.stringify({
+        model: body.model,
+        mode: body.mode,
+        seconds: body.seconds,
+        size: body.size,
+        aspect_ratio: body.aspect_ratio,
+        has_first_frame: !!body.first_frame
+    }));
+
+    const r = await apiFetch(`${API_BASE}/videos`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getKey()}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!r.ok) {
+        const err = await r.text();
+        throw new Error(`HTTP ${r.status} — ${err.slice(0, 200)}`);
+    }
+    const d = await r.json();
+    const id = d.video_id || d.id || d.task_id;
+    if (!id) throw new Error('Pas de video_id retourné');
+    return id;
+}
+
+async function uploadImageForFlash(dataUri) {
+    const normalized = await normalizeImageForApi(dataUri);
+    const pureBase64 = normalized.includes(',') ? normalized.split(',')[1] : normalized;
+    log('Upload ImgBB: ' + Math.round(pureBase64.length * 0.75 / 1024) + ' Ko');
+
+    const formData = new FormData();
+    formData.append('key', IMGBB_KEY);
+    formData.append('image', pureBase64);
+
+    const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error('ImgBB HTTP ' + response.status + ' — ' + err.slice(0, 150));
+    }
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error('ImgBB erreur : ' + (data.error?.message || 'inconnue'));
+    }
+    const url = data.data?.display_url || data.data?.url;
+    if (!url || !url.startsWith('http')) {
+        throw new Error('ImgBB URL invalide : ' + url);
+    }
+    log('URL publique (ImgBB): ' + url);
+    return url;
 }
 
 async function createImageTask(prompt) {
@@ -1340,21 +1795,21 @@ async function createImageTask(prompt) {
         throw new Error(`HTTP ${r.status} — ${err.slice(0, 180)}`);
     }
     const d = await r.json();
-
-    // Cas 1 : base64 renvoyé directement
     const b64 = d.data?.[0]?.b64_json;
-    if (b64) {
-        return 'data:image/png;base64,' + b64;
-    }
+    if (b64) return 'data:image/png;base64,' + b64;
 
-    // Cas 2 : URL renvoyée → on la convertit en data URI via proxy
     const url = d.data?.[0]?.url || d.url;
     if (!url) throw new Error("Pas d'image retournée");
-
     return await urlToDataUri(url);
 }
 
+// ══════════════════════════════════════════════════════════════════
+// POLL VIDEO
+// ══════════════════════════════════════════════════════════════════
 async function pollVideo(videoId, onProgress) {
+    const m = MODELS[state.model];
+    const needModelName = (m.api === 'modern');
+
     let wait = 25;
     while (wait > 0) {
         if (state.stopRequested) throw new Error('Arrêt demandé');
@@ -1362,6 +1817,7 @@ async function pollVideo(videoId, onProgress) {
         await sleep(1000);
         wait--;
     }
+
     for (let a = 0; a < MAX_POLLS; a++) {
         if (state.stopRequested) throw new Error('Arrêt demandé');
         if (a > 0) {
@@ -1373,7 +1829,10 @@ async function pollVideo(videoId, onProgress) {
                 r--;
             }
         }
-        const url = `${POLL_BASE}?video_id=${encodeURIComponent(videoId)}&model_name=${encodeURIComponent(VIDEO_MODEL)}`;
+
+        let url = `${POLL_BASE}?video_id=${encodeURIComponent(videoId)}`;
+        if (needModelName) url += `&model_name=${encodeURIComponent(m.apiName)}`;
+
         const r = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${getKey()}` }
         });
@@ -1381,6 +1840,7 @@ async function pollVideo(videoId, onProgress) {
         const st = d.status || 'unknown';
         const pg = d.progress || 0;
         onProgress(`Création… ${pg}%`);
+
         if (st === 'completed' || st === 'succeeded' || st === 'done') {
             const vUrl = d.metadata?.url || d.url || d.output?.url;
             if (!vUrl) throw new Error('Terminé mais URL manquante');
@@ -1394,18 +1854,20 @@ async function pollVideo(videoId, onProgress) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// EXTRACT LAST FRAME (avec fallback proxy CORS)
+// EXTRACT LAST FRAME (avec proxy CORS)
 // ══════════════════════════════════════════════════════════════════
 async function extractLastFrame(videoUrl) {
-    log('Téléchargement de la vidéo…');
+    log('Téléchargement de la vidéo source…');
     let blob;
     try {
+        // Essai direct
         const res = await fetch(videoUrl, { mode: 'cors' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         blob = await res.blob();
     } catch (e) {
-        log('Fetch direct vidéo échoué, tentative via proxy…');
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(videoUrl)}`;
+        log('Fetch direct échoué, tentative via proxy CORS…');
+        // ✅ Utilise le proxy CORS
+        const proxyUrl = proxiedVideoUrl(videoUrl);
         const res = await fetch(proxyUrl);
         if (!res.ok) throw new Error('Impossible de télécharger la vidéo (HTTP ' + res.status + ')');
         blob = await res.blob();
@@ -1425,7 +1887,6 @@ async function extractLastFrame(videoUrl) {
         };
 
         video.addEventListener('loadedmetadata', () => {
-            log('Vidéo chargée, durée: ' + video.duration.toFixed(2) + 's');
             video.currentTime = Math.max(0, video.duration - 0.05);
         });
 
@@ -1455,7 +1916,7 @@ async function extractLastFrame(videoUrl) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// GALLERY RENDER
+// GALLERY RENDER — avec proxy CORS pour les vidéos
 // ══════════════════════════════════════════════════════════════════
 function renderGallery() {
     const grid = $('gallery-grid');
@@ -1480,16 +1941,50 @@ function renderGallery() {
             : v.format === 'cinema' ? '21/9'
             : '1/1';
 
-        const mediaHtml = v.isImage
-            ? `<img src="${v.url}" alt="${escapeHtml(v.title)}" data-action="zoom" data-index="${i}">`
-            : `<video src="${v.url}" muted playsinline preload="metadata"
-                 onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"></video>`;
-
-        const badge = v.isImage ? '🖼️ Image' : `${v.duration.toFixed(1)}s`;
+        const badge = v.isImage ? '🖼️ Image' : `🎥 ${v.duration.toFixed(1)}s`;
 
         const useInPromptBtn = v.isImage
             ? `<button class="video-action use-prompt" data-action="useInPrompt" data-index="${i}" title="Utiliser dans le prompt">✏️</button>`
             : '';
+
+        let mediaHtml;
+        if (v.isImage) {
+            mediaHtml = `<img src="${v.url}" alt="${escapeHtml(v.title)}" data-action="zoom" data-index="${i}" loading="lazy">`;
+        } else {
+            // ✅ Vidéo via proxy CORS
+            const proxUrl = proxiedVideoUrl(v.url);
+            mediaHtml = `
+                <div class="video-loader" data-loader-index="${i}">
+                    <div class="video-loader-spinner"></div>
+                    <div>Chargement…</div>
+                </div>
+                <video
+                    src="${proxUrl}"
+                    crossorigin="anonymous"
+                    muted
+                    playsinline
+                    preload="metadata"
+                    loop
+                    data-index="${i}"
+                    data-original-url="${v.url}"
+                    onloadeddata="this.parentElement.querySelector('.video-loader').classList.add('hidden')"
+                    onmouseover="this.play().catch(()=>{})"
+                    onmouseout="this.pause();this.currentTime=0;"
+                    onclick="event.stopPropagation();window.openLightbox(this.dataset.originalUrl, true);"
+                    onerror="this.parentElement.querySelector('.video-loader').classList.add('hidden'); this.parentElement.querySelector('.video-error').classList.add('visible')"
+                ></video>
+                <div class="video-error">
+                    <div class="video-error-icon">⚠️</div>
+                    <div>Vidéo non disponible</div>
+                    <div style="margin-top:0.4rem;font-size:0.6rem;">
+                        <a href="${v.url}" target="_blank" style="color:var(--info);">Ouvrir dans un onglet</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        const playHint = v.isImage ? '' :
+            `<div class="video-play-hint">Cliquer pour agrandir</div>`;
 
         return `
             <div class="video-card" data-index="${i}">
@@ -1502,6 +1997,7 @@ function renderGallery() {
                         <button class="video-action" data-action="download" data-index="${i}" title="Télécharger">⬇</button>
                         <button class="video-action danger" data-action="delete" data-index="${i}" title="Supprimer">✕</button>
                     </div>
+                    ${playHint}
                 </div>
                 <div class="video-meta">
                     <div class="video-title">${escapeHtml(v.title)}</div>
@@ -1525,13 +2021,15 @@ function renderGallery() {
             if (action === 'delete') deleteVideo(idx);
             else if (action === 'download') downloadVideo(idx);
             else if (action === 'extend') openExtend(idx);
-            else if (action === 'zoom') openLightbox(state.videos[idx].url);
+            else if (action === 'zoom') {
+                const v = state.videos[idx];
+                openLightbox(v.url, !v.isImage);
+            }
             else if (action === 'useInPrompt') useImageInPrompt(idx);
         });
     });
 }
 
-// Utiliser une image de la galerie comme image source pour le prompt
 async function useImageInPrompt(index) {
     const img = state.videos[index];
     if (!img || !img.isImage) return;
@@ -1552,10 +2050,8 @@ async function useImageInPrompt(index) {
 
         renderAttachments();
         updateGenerateBtn();
-
         $('prompt-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
         $('prompt-input').focus();
-
         toast('Image prête à être utilisée dans le prompt ✓');
     } catch (e) {
         setStatus(null);
@@ -1617,7 +2113,8 @@ function openExtend(index) {
     const v = state.videos[index];
     if (!v || v.isImage) return;
     state.extendTarget = { index, video: v };
-    $('extend-video').src = v.url;
+    // ✅ Proxifie aussi pour la preview
+    $('extend-video').src = proxiedVideoUrl(v.url);
     $('extend-title').textContent = v.title;
     $('extend-duration').textContent = state.duration.toFixed(1);
     $('extend-prompt').value = '';
@@ -1643,67 +2140,19 @@ $('extend-confirm').addEventListener('click', async () => {
 
     try {
         const lastFrameDataUri = await extractLastFrame(video.url);
-        log('Dernière frame extraite : ' + lastFrameDataUri.slice(0, 50) + '…');
-
-        // Normaliser la frame au format courant
-        const normalized = await normalizeImageForFormat(lastFrameDataUri, state.format);
-        const pureBase64 = normalized.split(',')[1];
-        if (!pureBase64) throw new Error('Extraction base64 échouée');
-        log('Base64 pur : ' + pureBase64.length + ' caractères');
-
         const extensionPrompt = buildVideoPrompt(
-            (userPrompt || 'Continue the scene naturally with minimal motion.') +
-            ' STRICT: the first frame of this clip MUST be identical to the provided reference frame. Do not restyle, do not recolor, do not change the subject.'
+            (userPrompt || 'Continue the scene naturally with minimal motion.')
         );
 
         setStatus('Création de la tâche d\'extension…');
-
-        const body = {
-            model: VIDEO_MODEL,
-            prompt: extensionPrompt,
-            num_frames: framesFromSeconds(state.duration),
-            frame_rate: FRAME_RATE,
-            image: pureBase64,
-            image_weight: 1.0,
-            strength: 0.15,
-            init_image_strength: 1.0,
-            preserve_subject: true,
-            consistency: 'high',
-            motion_strength: 0.4,
-            guidance_scale: 9.5
-        };
-
-        log('Envoi de la requête d\'extension…');
-
-        const r = await apiFetch(`${API_BASE}/videos`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${getKey()}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-
-        if (!r.ok) {
-            const errText = await r.text();
-            throw new Error(`HTTP ${r.status} — ${errText.slice(0, 180)}`);
-        }
-
-        const d = await r.json();
-        const videoId = d.video_id || d.id || d.task_id;
-        if (!videoId) throw new Error('Pas de video_id retourné');
-        log('Tâche d\'extension créée : ' + String(videoId).slice(0, 30) + '…');
-
+        const videoId = await createVideoTask(extensionPrompt, lastFrameDataUri);
         const newUrl = await pollVideo(videoId, p => setStatus(p));
-        log('Extension terminée : ' + newUrl);
 
         addVideo(newUrl, `Extension · ${video.title}`);
         setStatus('✓ Extension terminée');
         toast('Vidéo prolongée ✓');
         await sleep(2500);
-
     } catch (e) {
-        log('Erreur extension: ' + e.message);
         toast('Erreur : ' + e.message.slice(0, 100), 'error', 6000);
     } finally {
         state.isRunning = false;
@@ -1761,7 +2210,7 @@ $('generate-btn').addEventListener('click', async () => {
         if (e.message === 'Arrêt demandé') toast('Génération arrêtée', 'warn');
         else {
             log('Erreur: ' + e.message);
-            toast('Erreur : ' + e.message.slice(0, 80), 'error', 5000);
+            toast('Erreur : ' + e.message.slice(0, 100), 'error', 6000);
         }
     } finally {
         state.isRunning = false;
@@ -1775,8 +2224,10 @@ $('generate-btn').addEventListener('click', async () => {
 // INIT
 // ══════════════════════════════════════════════════════════════════
 (function init() {
+    loadModel();
     loadGallery();
     renderGallery();
+    updateModelUI();
     updateGenerateBtn();
     $('attach-btn').style.display = 'none';
     $('gallery-pick-btn').style.display = 'none';
@@ -1787,7 +2238,7 @@ $('generate-btn').addEventListener('click', async () => {
         }
     });
 
-    log('Flow Studio prêt — utilisez ✏️ sur une image pour l\'injecter dans le prompt');
+    log('Flow Studio prêt — Modèle : ' + MODELS[state.model].apiName + ' + Proxy CORS');
 })();
 </script>
 
