@@ -126,9 +126,27 @@
         background: var(--surface); border: 1px solid var(--border);
         border-radius: var(--radius-lg); padding: 1.2rem;
         margin-bottom: 1rem; position: relative;
-        transition: border-color 0.3s;
+        transition: border-color 0.3s, background-color 0.2s;
     }
     .composer:focus-within { border-color: var(--border-3); }
+    /* ═══ État drag-over du composer ═══ */
+    .composer.drag-over {
+        border-color: var(--info);
+        background: rgba(59, 130, 246, 0.05);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .composer.drag-over::after {
+        content: '📥 Déposez vos images ici';
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        font-weight: 600; font-size: 0.9rem;
+        border-radius: var(--radius-lg);
+        pointer-events: none;
+        z-index: 10;
+        backdrop-filter: blur(2px);
+    }
     .composer-input {
         width: 100%; min-height: 100px; padding: 0.5rem 0;
         border: none; background: transparent; color: var(--ink);
@@ -139,6 +157,7 @@
     .composer-attachments {
         display: flex; flex-wrap: wrap; gap: 0.5rem;
         margin-top: 0.8rem;
+        min-height: 0;
     }
     .attach-chip {
         display: flex; align-items: center; gap: 0.5rem;
@@ -564,7 +583,6 @@
         color: var(--ink-3);
         font-size: 0.78rem;
     }
-    /* ═══ Modal de sélection du modèle ═══ */
     .model-option {
         display: flex; align-items: flex-start; gap: 0.8rem;
         padding: 1rem; border-radius: 12px;
@@ -665,7 +683,7 @@
         </button>
     </div>
 
-    <div class="composer">
+    <div class="composer" id="composer">
         <textarea class="composer-input" id="prompt-input"
             placeholder="Décrivez votre vision… Un coucher de soleil sur une plage déserte, une femme qui marche au ralenti, une ville futuriste baignée de néons…"></textarea>
         <div class="composer-attachments" id="attachments"></div>
@@ -768,7 +786,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Modal Clé API -->
 <div class="modal-backdrop" id="api-modal">
     <div class="modal">
         <div class="modal-title">🔑 Clé API Agnes</div>
@@ -785,7 +802,6 @@
     </div>
 </div>
 
-<!-- Modal sélection du modèle -->
 <div class="modal-backdrop" id="model-modal">
     <div class="modal">
         <div class="modal-title">🎬 Modèle vidéo</div>
@@ -829,7 +845,6 @@
     </div>
 </div>
 
-<!-- Modal prolonger -->
 <div class="modal-backdrop" id="extend-modal">
     <div class="modal">
         <div class="modal-title">🔗 Prolonger la vidéo</div>
@@ -853,7 +868,6 @@
     </div>
 </div>
 
-<!-- Modal image picker -->
 <div class="modal-backdrop" id="image-picker-modal">
     <div class="modal">
         <div class="modal-title">🖼️ Choisir une image</div>
@@ -887,23 +901,21 @@ const STORAGE_KEY = 'flow_studio_api';
 const GALLERY_KEY = 'flow_studio_gallery';
 const MODEL_KEY = 'flow_studio_model';
 
-// Modèles disponibles
 const MODELS = {
     'v2.0': {
         id: 'v2.0',
         label: 'v2.0',
         apiName: 'agnes-video-v2.0',
-        api: 'legacy'   // utilise num_frames + frame_rate
+        api: 'legacy'
     },
     '2.5-flash': {
         id: '2.5-flash',
         label: '2.5 Flash',
         apiName: 'agnes-video-2.5-flash',
-        api: 'modern'   // utilise seconds + size + mode
+        api: 'modern'
     }
 };
 
-// ImgBB (uniquement utilisé pour 2.5 Flash)
 const IMGBB_KEY = 'b1838df7ac4b8d4fdb1eaf54b20d728c';
 const IMG_MIN_SIDE = 256;
 const IMG_MAX_SIDE = 5760;
@@ -923,7 +935,7 @@ const state = {
     videos: [],
     extendTarget: null,
     pickerSelectedIndex: null,
-    model: 'v2.0'   // V2.0 par défaut
+    model: 'v2.0'
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -1263,6 +1275,112 @@ function renderAttachments() {
 $('prompt-input').addEventListener('input', updateGenerateBtn);
 
 // ══════════════════════════════════════════════════════════════════
+// ⭐ DRAG & DROP — glisser-déposer des images dans le composer
+// ══════════════════════════════════════════════════════════════════
+const composer = $('composer');
+
+function loadImageFile(file) {
+    if (!file) return;
+    // Vérifie que c'est bien une image
+    if (!file.type.startsWith('image/')) {
+        toast('Fichier ignoré (pas une image) : ' + file.name, 'warn');
+        return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+        toast('Image trop lourde (max 15 Mo) : ' + file.name, 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+        state.image = ev.target.result;
+        renderAttachments();
+        updateGenerateBtn();
+        toast('Image ajoutée ✓');
+    };
+    reader.onerror = () => toast('Erreur lecture fichier', 'error');
+    reader.readAsDataURL(file);
+}
+
+// Empêche le navigateur d'ouvrir l'image dans un nouvel onglet
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    composer.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+    }, false);
+});
+
+// Affiche l'état "drag over"
+composer.addEventListener('dragenter', e => {
+    composer.classList.add('drag-over');
+});
+
+composer.addEventListener('dragover', e => {
+    composer.classList.add('drag-over');
+});
+
+composer.addEventListener('dragleave', e => {
+    // On ne retire la classe que si on sort vraiment du composer
+    // (pas en passant sur un enfant)
+    if (e.target === composer || !composer.contains(e.relatedTarget)) {
+        composer.classList.remove('drag-over');
+    }
+});
+
+// Gestion du drop
+composer.addEventListener('drop', e => {
+    composer.classList.remove('drag-over');
+
+    const dt = e.dataTransfer;
+    if (!dt) return;
+
+    // Récupère tous les fichiers déposés
+    const files = dt.files ? Array.from(dt.files) : [];
+
+    if (files.length === 0) {
+        // Peut-être un drop d'URL
+        const url = dt.getData('text/uri-list') || dt.getData('text/plain');
+        if (url && url.startsWith('http')) {
+            // Charge l'image depuis l'URL
+            setStatus('Téléchargement de l\'image…');
+            urlToDataUri(url.trim()).then(dataUri => {
+                state.image = dataUri;
+                renderAttachments();
+                updateGenerateBtn();
+                setStatus(null);
+                toast('Image ajoutée depuis URL ✓');
+            }).catch(err => {
+                setStatus(null);
+                toast('Impossible de charger l\'image : ' + err.message.slice(0, 80), 'error', 5000);
+            });
+        } else {
+            toast('Aucun fichier détecté dans le drop', 'warn');
+        }
+        return;
+    }
+
+    // Prend la première image (le state n'en gère qu'une seule)
+    const imageFile = files.find(f => f.type.startsWith('image/'));
+    if (imageFile) {
+        // Bascule automatiquement en mode Image → Vidéo si nécessaire
+        if (state.mode === 'text-to-video') {
+            document.querySelectorAll('.mode-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.mode === 'image-to-video');
+            });
+            state.mode = 'image-to-video';
+            $('attach-btn').style.display = 'flex';
+            $('gallery-pick-btn').style.display = 'flex';
+        }
+        loadImageFile(imageFile);
+
+        if (files.length > 1) {
+            toast('Plusieurs fichiers détectés — seul le premier est utilisé', 'info', 3000);
+        }
+    } else {
+        toast('Aucune image dans les fichiers déposés', 'warn');
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
 // UI — IMAGE PICKER
 // ══════════════════════════════════════════════════════════════════
 $('gallery-pick-btn').addEventListener('click', () => {
@@ -1486,7 +1604,7 @@ async function apiFetch(url, opts = {}) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CREATE VIDEO TASK — dispatcher selon le modèle sélectionné
+// CREATE VIDEO TASK
 // ══════════════════════════════════════════════════════════════════
 async function createVideoTask(prompt, imageDataUri = null) {
     const m = MODELS[state.model];
@@ -1499,9 +1617,6 @@ async function createVideoTask(prompt, imageDataUri = null) {
     }
 }
 
-// ──────────────────────────────────────────────────────────────────
-// V2.0 — num_frames + frame_rate (ton modèle qui fonctionne)
-// ──────────────────────────────────────────────────────────────────
 async function createVideoTaskV2(prompt, imageDataUri = null) {
     const body = {
         model: MODELS['v2.0'].apiName,
@@ -1556,9 +1671,6 @@ async function createVideoTaskV2(prompt, imageDataUri = null) {
     return id;
 }
 
-// ──────────────────────────────────────────────────────────────────
-// 2.5 Flash — seconds + size + mode (text / keyframe)
-// ──────────────────────────────────────────────────────────────────
 async function createVideoTaskFlash(prompt, imageDataUri = null) {
     let firstFrameUrl = null;
 
@@ -1619,9 +1731,6 @@ async function createVideoTaskFlash(prompt, imageDataUri = null) {
     return id;
 }
 
-// ══════════════════════════════════════════════════════════════════
-// UPLOAD IMGBB (uniquement pour Flash)
-// ══════════════════════════════════════════════════════════════════
 async function uploadImageForFlash(dataUri) {
     const normalized = await normalizeImageForApi(dataUri);
     const pureBase64 = normalized.includes(',') ? normalized.split(',')[1] : normalized;
@@ -1652,9 +1761,6 @@ async function uploadImageForFlash(dataUri) {
     return url;
 }
 
-// ══════════════════════════════════════════════════════════════════
-// CREATE IMAGE TASK (toujours via agnes-image-2.1-flash)
-// ══════════════════════════════════════════════════════════════════
 async function createImageTask(prompt) {
     const sizeMap = {
         portrait: '1024x1792',
@@ -1692,7 +1798,7 @@ async function createImageTask(prompt) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// POLL VIDEO — avec ou sans model_name selon le modèle
+// POLL VIDEO
 // ══════════════════════════════════════════════════════════════════
 async function pollVideo(videoId, onProgress) {
     const m = MODELS[state.model];
